@@ -1,0 +1,1100 @@
+---
+swagger: "2.0"
+info:
+  description: ""
+  version: "1.0.0"
+  title: "Demo App"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "virtserver.swaggerhub.com"
+basePath: "/xuyendangvan/TFNSchool/1.0.0"
+tags:
+- name: "user"
+  description: "Everything about your user"
+  externalDocs:
+    description: "Process all user action and provide user data"
+    url: "http://tfnkindergarten.com"
+- name: "admin"
+  description: "Functions for admin role"
+schemes:
+- "https"
+- "http"
+paths:
+  /student:
+    get:
+      tags:
+      - "student"
+      summary: "Finds list student by range id"
+      description: "Find the list student according to range ID"
+      operationId: "findStudentListByIndex"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "startIndex"
+        in: "query"
+        description: "start index value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "StartIndex"
+      - name: "offset"
+        in: "query"
+        description: "the number of records that needs to be considered for filter"
+        required: false
+        type: "integer"
+        x-exportParamName: "Offset"
+        x-optionalDataType: "Int32"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Student"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+    post:
+      tags:
+      - "student"
+      summary: "Add a new user to the system"
+      description: ""
+      operationId: "addStudent"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be added to the system"
+        required: true
+        schema:
+          $ref: "#/definitions/Student"
+        x-exportParamName: "Body"
+      responses:
+        "405":
+          description: "Invalid input"
+    put:
+      tags:
+      - "student"
+      summary: "Update an existing student"
+      description: ""
+      operationId: "updateStudent"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Student object that needs to be updated"
+        required: true
+        schema:
+          $ref: "#/definitions/Student"
+        x-exportParamName: "Body"
+      responses:
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "Student not found"
+        "405":
+          description: "Validation exception"
+  /student/{id}:
+    get:
+      tags:
+      - "student"
+      summary: "Finds student by id"
+      description: "Find the student according to ID"
+      operationId: "findStudentByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Student"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+    delete:
+      tags:
+      - "student"
+      summary: "Deletes student by id"
+      description: "Delete the student according to ID"
+      operationId: "deleteStudentByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+  /teacher:
+    get:
+      tags:
+      - "teacher"
+      summary: "Finds list teacher by range id"
+      description: "Find the list teacher according to range ID"
+      operationId: "findTeacherListByIndex"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "startIndex"
+        in: "query"
+        description: "start index value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "StartIndex"
+      - name: "offset"
+        in: "query"
+        description: "the number of records that needs to be considered for filter"
+        required: false
+        type: "integer"
+        x-exportParamName: "Offset"
+        x-optionalDataType: "Int32"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Teacher"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+    post:
+      tags:
+      - "teacher"
+      summary: "Add a new teacher to the system"
+      description: ""
+      operationId: "addTeacher"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "teacher object that needs to be added to the system"
+        required: true
+        schema:
+          $ref: "#/definitions/Teacher"
+        x-exportParamName: "Body"
+      responses:
+        "405":
+          description: "Invalid input"
+    put:
+      tags:
+      - "teacher"
+      summary: "Update an existing teacher"
+      description: ""
+      operationId: "updateTeacher"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "teacher object that needs to be updated"
+        required: true
+        schema:
+          $ref: "#/definitions/Teacher"
+        x-exportParamName: "Body"
+      responses:
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "teacher not found"
+        "405":
+          description: "Validation exception"
+  /teacher/{id}:
+    get:
+      tags:
+      - "teacher"
+      summary: "Finds teacher by id"
+      description: "Find the teacher according to ID"
+      operationId: "findTeacherByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Teacher"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+    delete:
+      tags:
+      - "teacher"
+      summary: "Deletes teacher by id"
+      description: "Delete the teacher according to ID"
+      operationId: "deleteTeacherByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+  /teacher/class/{id}:
+    get:
+      tags:
+      - "teacher"
+      summary: "Finds list class by teacher id"
+      description: "Find the teacher according to ID"
+      operationId: "findClassByTeacherID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Class"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+  /parent/:
+    post:
+      tags:
+      - "parent"
+      summary: "Add a new parent to the system"
+      description: ""
+      operationId: "addParent"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Parent object that needs to be added to the system"
+        required: true
+        schema:
+          $ref: "#/definitions/Parent"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Insert success"
+        "405":
+          description: "Invalid input"
+  /parent/{id}:
+    get:
+      tags:
+      - "parent"
+      summary: "Find pet by ID"
+      description: "Returns a single parent"
+      operationId: "getParentById"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of parent to return"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Parent"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "Parent not found"
+      security:
+      - api_key: []
+    put:
+      tags:
+      - "parent"
+      summary: "Updates a parent in the database with form data"
+      description: ""
+      operationId: "createParentWithForm"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of pet that needs to be updated"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "Id"
+      - name: "name"
+        in: "formData"
+        description: "Updated name of the pet"
+        required: false
+        type: "string"
+        x-exportParamName: "Name"
+        x-optionalDataType: "String"
+      - name: "status"
+        in: "formData"
+        description: "Updated status of the pet"
+        required: false
+        type: "string"
+        x-exportParamName: "Status"
+        x-optionalDataType: "String"
+      responses:
+        "405":
+          description: "Invalid input"
+      security:
+      - petstore_auth:
+        - "write:pets"
+        - "read:pets"
+    delete:
+      tags:
+      - "parent"
+      summary: "Deletes a parent account"
+      description: ""
+      operationId: "deleteParent"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "api_key"
+        in: "header"
+        required: false
+        type: "string"
+        x-exportParamName: "ApiKey"
+        x-optionalDataType: "String"
+      - name: "id"
+        in: "path"
+        description: "Parent id to delete"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "Pet not found"
+  /parent/student/{id}:
+    get:
+      tags:
+      - "parent"
+      summary: "Finds list student by parent id"
+      description: "Find the student according to ID"
+      operationId: "findStudentByParentID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID value that needs to be considered for filter"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Student"
+        "400":
+          description: "Invalid ID value"
+        "404":
+          description: "ID not found"
+  /user:
+    post:
+      tags:
+      - "user"
+      summary: "Create user"
+      description: "This can only be done by the admin user."
+      operationId: "createUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Created user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+        x-exportParamName: "Body"
+      responses:
+        default:
+          description: "successful operation"
+  /user/createWithList:
+    post:
+      tags:
+      - "user"
+      summary: "Creates list of users with given input array"
+      description: ""
+      operationId: "createUsersWithListInput"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "List of user object"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/User"
+        x-exportParamName: "Body"
+      responses:
+        default:
+          description: "successful operation"
+  /user/login:
+    get:
+      tags:
+      - "user"
+      summary: "Logs user into the system"
+      description: ""
+      operationId: "loginUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "query"
+        description: "The user name for login"
+        required: true
+        type: "string"
+        x-exportParamName: "Username"
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        type: "string"
+        x-exportParamName: "Password"
+      responses:
+        "200":
+          description: "successful operation"
+          headers:
+            X-Rate-Limit:
+              type: "integer"
+              format: "int32"
+              description: "calls per hour allowed by the user"
+            X-Expires-After:
+              type: "string"
+              format: "date-time"
+              description: "date in UTC when token expires"
+          schema:
+            type: "string"
+        "400":
+          description: "Invalid username/password supplied"
+  /user/logout:
+    get:
+      tags:
+      - "user"
+      summary: "Logs out current logged in user session"
+      description: ""
+      operationId: "logoutUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters: []
+      responses:
+        default:
+          description: "successful operation"
+  /user/{userID}:
+    get:
+      tags:
+      - "user"
+      summary: "Get user by user id"
+      description: ""
+      operationId: "getUserByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "userID"
+        in: "path"
+        description: "The ID that needs to be fetched. Use 1 for testing. "
+        required: true
+        type: "integer"
+        x-exportParamName: "UserID"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/User"
+        "400":
+          description: "Invalid id supplied"
+        "404":
+          description: "User not found"
+    put:
+      tags:
+      - "user"
+      summary: "Updated user"
+      description: "This can only be done by the logged in user."
+      operationId: "updateUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "userID"
+        in: "path"
+        description: "ID that need to be updated"
+        required: true
+        type: "string"
+        x-exportParamName: "UserID"
+      - in: "body"
+        name: "body"
+        description: "Updated user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+        x-exportParamName: "Body"
+      responses:
+        "400":
+          description: "Invalid user supplied"
+        "404":
+          description: "User not found"
+    delete:
+      tags:
+      - "user"
+      summary: "Delete user"
+      description: "This can only be done by the logged in user."
+      operationId: "deleteUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "userID"
+        in: "path"
+        description: "The ID that needs to be deleted"
+        required: true
+        type: "string"
+        x-exportParamName: "UserID"
+      responses:
+        "400":
+          description: "Invalid username supplied"
+        "404":
+          description: "User not found"
+  /notification:
+    post:
+      tags:
+      - "notification"
+      summary: "Create notification"
+      description: "This can only be done by the admin user."
+      operationId: "createNotification"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Created notification object"
+        required: true
+        schema:
+          $ref: "#/definitions/Notification"
+        x-exportParamName: "Body"
+      responses:
+        default:
+          description: "successful operation"
+    put:
+      tags:
+      - "notification"
+      summary: "Update notification"
+      description: "This can only be done by the admin user."
+      operationId: "updateNotification"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Updated notification object"
+        required: true
+        schema:
+          $ref: "#/definitions/Notification"
+        x-exportParamName: "Body"
+      responses:
+        default:
+          description: "successful operation"
+  /notification/{id}:
+    get:
+      tags:
+      - "notification"
+      summary: "Get notification"
+      description: ""
+      operationId: "getNotificationByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "id of notification object"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Notification"
+        "400":
+          description: "Invalid id supplied"
+        "404":
+          description: "Notification not found"
+    delete:
+      tags:
+      - "notification"
+      summary: "Delete notification"
+      description: ""
+      operationId: "deleteNotificationByID"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "id of notification object"
+        required: true
+        type: "integer"
+        x-exportParamName: "Id"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid id supplied"
+        "404":
+          description: "Notification not found"
+securityDefinitions:
+  petstore_auth:
+    type: "oauth2"
+    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
+    flow: "implicit"
+    scopes:
+      write:pets: "modify pets in your account"
+      read:pets: "read your pets"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      username:
+        type: "string"
+      name:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      role:
+        type: "integer"
+        format: "int32"
+        description: "User Role: 1- admin, 2- teacher, 3- parent"
+      userStatus:
+        type: "integer"
+        format: "int32"
+        description: "User Status: 1- active, 2- inactive"
+    xml:
+      name: "User"
+    example:
+      password: "password"
+      role: 6
+      userStatus: 1
+      phone: "phone"
+      name: "name"
+      id: 0
+      email: "email"
+      username: "username"
+  Student:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      classID:
+        type: "integer"
+      parentID:
+        type: "integer"
+      name:
+        type: "string"
+      birthday:
+        type: "string"
+        format: "date-time"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      role:
+        type: "integer"
+        format: "int32"
+        description: "User Role: 1- admin, 2- teacher, 3- parent"
+      userStatus:
+        type: "integer"
+        format: "int32"
+        description: "User Status: 1- active, 2- inactive"
+    xml:
+      name: "Student"
+    example:
+      birthday: "2000-01-23T04:56:07.000+00:00"
+      classID: 6
+      password: "password"
+      role: 5
+      userStatus: 5
+      phone: "phone"
+      name: "name"
+      id: 0
+      parentID: 1
+  Parent:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+      email:
+        type: "string"
+      loginName:
+        type: "string"
+      address:
+        type: "string"
+      addressCity:
+        type: "string"
+      addressDistrict:
+        type: "string"
+      addressStreet:
+        type: "string"
+      phone:
+        type: "string"
+      photo:
+        type: "string"
+      status:
+        type: "integer"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "Parent"
+    example:
+      address: "address"
+      dateCreated: "dateCreated"
+      addressStreet: "addressStreet"
+      phone: "phone"
+      loginName: "loginName"
+      name: "name"
+      photo: "photo"
+      id: 0
+      addressDistrict: "addressDistrict"
+      email: "email"
+      addressCity: "addressCity"
+      status: 6
+  Class:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      yearID:
+        type: "integer"
+      level:
+        type: "integer"
+      teacherID:
+        type: "integer"
+      name:
+        type: "string"
+    example:
+      teacherID: 5
+      level: 1
+      name: "name"
+      id: 0
+      yearID: 6
+  Menu:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      level:
+        type: "integer"
+      day:
+        type: "integer"
+      classID:
+        type: "integer"
+      assignedDate:
+        type: "string"
+      note:
+        type: "string"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "Menu"
+  MenuDetail:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      menuID:
+        type: "integer"
+      sessionID:
+        type: "integer"
+      foodName:
+        type: "string"
+      note:
+        type: "string"
+      canteenID:
+        type: "integer"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "MenuDetail"
+  TuitionPayment:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      year:
+        type: "integer"
+      quarter:
+        type: "integer"
+      studentID:
+        type: "integer"
+      paid:
+        type: "integer"
+      date_paid:
+        type: "string"
+      date_notice:
+        type: "string"
+      date_seen:
+        type: "string"
+      noticeCount:
+        type: "integer"
+      note:
+        type: "string"
+      amount:
+        type: "string"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "TuitionPayment"
+  Schedule:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      level:
+        type: "integer"
+      dayOfWeek:
+        type: "integer"
+      classID:
+        type: "integer"
+      assignedDate:
+        type: "string"
+      note:
+        type: "string"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "Schedule"
+  Activity:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      classID:
+        type: "integer"
+      dateOccur:
+        type: "string"
+      dateExpired:
+        type: "string"
+      teacherID:
+        type: "integer"
+      title:
+        type: "string"
+      content:
+        type: "string"
+      photo1:
+        type: "string"
+      caption1:
+        type: "string"
+      photo2:
+        type: "string"
+      caption2:
+        type: "string"
+      photo3:
+        type: "string"
+      caption3:
+        type: "string"
+      photo4:
+        type: "string"
+      caption4:
+        type: "string"
+      photo5:
+        type: "string"
+      caption5:
+        type: "string"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "Activity"
+  Notification:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      priority:
+        type: "integer"
+      type:
+        type: "integer"
+      title:
+        type: "string"
+      content:
+        type: "string"
+      posterID:
+        type: "integer"
+      dateCreated:
+        type: "string"
+      dateExpired:
+        type: "string"
+    xml:
+      name: "Notification"
+    example:
+      dateCreated: "dateCreated"
+      dateExpired: "dateExpired"
+      id: 0
+      priority: 6
+      type: 1
+      title: "title"
+      content: "content"
+      posterID: 5
+  Notice:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      type:
+        type: "integer"
+      content:
+        type: "string"
+      confirmMessage:
+        type: "string"
+      posterID:
+        type: "integer"
+      receiverID:
+        type: "integer"
+      dateCreated:
+        type: "string"
+      dateExpired:
+        type: "string"
+    xml:
+      name: "Notice"
+  Teacher:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      name:
+        type: "string"
+      email:
+        type: "string"
+      phone:
+        type: "string"
+      address:
+        type: "string"
+      classID:
+        type: "integer"
+      dateCreated:
+        type: "string"
+    xml:
+      name: "String"
+    example:
+      classID: 6
+      address: "address"
+      dateCreated: "dateCreated"
+      phone: "phone"
+      name: "name"
+      id: 0
+      email: "email"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
