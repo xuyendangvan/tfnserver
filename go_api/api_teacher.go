@@ -29,7 +29,7 @@ func AddTeacher(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-	var teacher model.Teacher
+	var teacher []model.Teacher
 	err := decoder.Decode(&teacher)
 	log.Println(teacher)
 	if err != nil {
@@ -44,28 +44,36 @@ func AddTeacher(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func createRecordTeachers(teacher model.Teacher) (err error) {
+func createRecordTeachers(list []model.Teacher) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
 	if err != nil {
 		return err
 	}
-	ID := teacher.Id
-	Name := teacher.Name
-	Email := teacher.Email
-	Phone := teacher.Phone
-	Address := teacher.Address
-	ClassID := teacher.ClassID
-	DateCreate := teacher.DateCreated
+	for _, item := range list {
+		ID := item.Id
+		UserID := item.UserID
+		Name := item.Name
+		Email := item.Email
+		LoginName := item.LoginName
+		Address := item.Address
+		AddressCity := item.AddressCity
+		AddressDistrict := item.AddressDistrict
+		AddressStreet := item.AddressStreet
+		Phone := item.Phone
+		Status := item.Status
+		DateCreated := time.Now()
+		DateUpdate := time.Now()
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Teacher(id, class_id, name, email, phone, address, date_create) VALUES(?,?,?,?,?,?,?)")
-	if err != nil {
-		return err
-	}
-	if _, err := insForm.Exec(ID, ClassID, Name, Email, Phone, Address, DateCreate); err != nil {
-		tx.Rollback()
-		return err
+		insForm, err := db.SQLExec(tx, "INSERT INTO Teacher(id,user_id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+		if err != nil {
+			return err
+		}
+		if _, err := insForm.Exec(ID, UserID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 	tx.Commit()
 	return nil
@@ -103,9 +111,14 @@ func deleteRecordTeacher(ID string) (err error) {
 }
 
 func FindClassByTeacherID(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
 }
 
+func FindNotificationByTeacherID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}
 func FindTeacherByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Connection", "close")
@@ -135,10 +148,12 @@ func getDataTeacherFromDB(id string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date time.Time
-		rows.Scan(&data.Id, &data.ClassID, &data.Name, &data.Email, &data.Phone, &data.Address, &date)
-		data.DateCreated = date.Format(time.RFC3339)
-		//model student in go different with table student in database mysql
+		var date, datecreate time.Time
+		var count int
+		var password, addressward string
+		rows.Scan(&data.Id, &data.UserID, &data.Name, &data.LoginName, &password, &data.Email, &data.Phone, &data.AddressCity, &data.AddressDistrict, &addressward, &data.AddressStreet, &data.Address, &data.Status, &datecreate, &date, &count)
+		//user.UpdateDate = h.ConvertDateToString(date, time.RFC3339)
+		data.DateCreated = datecreate.Format(time.RFC3339)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -191,16 +206,20 @@ func getDataTeacherFromDBWithIndex(startIndex string, offset string) []byte {
 		data    model.Teacher
 		records []model.Teacher
 	)
-	rows, err := database.Query("SELECT * FROM Teacher offset ? limit ?", startIndex, offset)
+	limitValue, err := strconv.Atoi(offset)
+	startValue, err := strconv.Atoi(startIndex)
+	rows, err := database.Query("SELECT * FROM Teacher limit ? offset ?", limitValue, startValue)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	for rows.Next() {
-		var date time.Time
-		rows.Scan(&data.Id, &data.ClassID, &data.Name, &data.Email, &data.Phone, &data.Address, &date)
-		data.DateCreated = date.Format(time.RFC3339)
-		//model student in go different with table student in database mysql
+		var date, datecreate time.Time
+		var count int
+		var password, addressward string
+		rows.Scan(&data.Id, &data.UserID, &data.Name, &data.LoginName, &password, &data.Email, &data.Phone, &data.AddressCity, &data.AddressDistrict, &addressward, &data.AddressStreet, &data.Address, &data.Status, &datecreate, &date, &count)
+		//user.UpdateDate = h.ConvertDateToString(date, time.RFC3339)
+		data.DateCreated = datecreate.Format(time.RFC3339)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -239,7 +258,7 @@ func UpdateTeacher(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func updateRecordTeacher(ID string, t model.Teacher) (err error) {
+func updateRecordTeacher(ID string, item model.Teacher) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -248,18 +267,22 @@ func updateRecordTeacher(ID string, t model.Teacher) (err error) {
 		return err
 	}
 	sid, err := strconv.Atoi(ID)
-	ClassID := t.ClassID
-	Name := t.Name
-	Email := t.Email
-	Phone := t.Phone
-	Address := t.Address
-	DateCreated := t.DateCreated
-	insForm, err := db.SQLExec(tx, "Update Teacher Set class_id= ?,name= ?, email= ? ,phone= ?,address= ?, date_created = ?, where id= ?")
+	Name := item.Name
+	Email := item.Email
+	LoginName := item.LoginName
+	Address := item.Address
+	AddressCity := item.AddressCity
+	AddressDistrict := item.AddressDistrict
+	AddressStreet := item.AddressStreet
+	Phone := item.Phone
+	Status := item.Status
+	DateUpdate := time.Now()
+	insForm, err := db.SQLExec(tx, "Update Teacher Set name= ?,login_name= ?, email= ? ,tel= ?,address_city= ?,address_district = ?, address_street = ?,address_ward=?,address=?,status = ?, date_update= ?, update_count = update_count + 1 where id= ?")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	if _, err := insForm.Exec(ClassID, Name, Email, Phone, Address, DateCreated, sid); err != nil {
+	if _, err := insForm.Exec(Name, LoginName, Email, Phone, AddressCity, AddressDistrict, AddressStreet, "ward", Address, Status, DateUpdate, sid); err != nil {
 		tx.Rollback()
 		log.Println(err)
 		return err

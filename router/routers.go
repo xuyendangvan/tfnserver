@@ -74,6 +74,20 @@ var routes = Routes{
 	},
 
 	Route{
+		"FindScheduleByClassID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/classes/{id}/schedule",
+		api.FindScheduleByClassID,
+	},
+
+	Route{
+		"FindStudentByClassID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/classes/{id}/students",
+		api.FindStudentByClassID,
+	},
+
+	Route{
 		"FindClassByID",
 		strings.ToUpper("Get"),
 		"/xuyendangvan/DemoAPI/1.0.0/classes/{id}",
@@ -88,16 +102,9 @@ var routes = Routes{
 	},
 
 	Route{
-		"FindStudentByClassID",
-		strings.ToUpper("Get"),
-		"/xuyendangvan/DemoAPI/1.0.0/classes/{id}/student",
-		api.FindStudentByClassID,
-	},
-
-	Route{
 		"UpdateClass",
 		strings.ToUpper("Put"),
-		"/xuyendangvan/DemoAPI/1.0.0/classes",
+		"/xuyendangvan/DemoAPI/1.0.0/classes/{id}",
 		api.UpdateClass,
 	},
 
@@ -179,31 +186,10 @@ var routes = Routes{
 	},
 
 	Route{
-		"CreateParentWithForm",
-		strings.ToUpper("Put"),
-		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}",
-		api.CreateParentWithForm,
-	},
-
-	Route{
-		"DeleteParent",
-		strings.ToUpper("Delete"),
-		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}",
-		api.DeleteParent,
-	},
-
-	Route{
 		"FindStudentByParentID",
 		strings.ToUpper("Get"),
 		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}/students",
 		api.FindStudentByParentID,
-	},
-
-	Route{
-		"GetParentById",
-		strings.ToUpper("Get"),
-		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}",
-		api.GetParentById,
 	},
 
 	Route{
@@ -221,10 +207,52 @@ var routes = Routes{
 	},
 
 	Route{
+		"CreateParentWithForm",
+		strings.ToUpper("Put"),
+		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}",
+		api.UpdateParent,
+	},
+
+	Route{
+		"DeleteParent",
+		strings.ToUpper("Delete"),
+		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}",
+		api.DeleteParent,
+	},
+
+	Route{
+		"GetParentById",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}",
+		api.GetParentById,
+	},
+
+	Route{
 		"AddStudent",
 		strings.ToUpper("Post"),
 		"/xuyendangvan/DemoAPI/1.0.0/students",
 		api.AddStudent,
+	},
+
+	Route{
+		"FindStudentActivityByID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/students/{id}/activity",
+		api.FindStudentActivityByID,
+	},
+
+	Route{
+		"FindStudentNoticeByID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/students/{id}/notice",
+		api.FindStudentNoticeByID,
+	},
+
+	Route{
+		"FindStudentTuitionFeeyByID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/students/{id}/tuitionfee",
+		api.FindStudentTuitionFeeyByID,
 	},
 
 	Route{
@@ -263,17 +291,24 @@ var routes = Routes{
 	},
 
 	Route{
-		"DeleteTeacherByID",
-		strings.ToUpper("Delete"),
-		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}",
-		api.DeleteTeacherByID,
-	},
-
-	Route{
 		"FindClassByTeacherID",
 		strings.ToUpper("Get"),
 		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}/class",
 		api.FindClassByTeacherID,
+	},
+
+	Route{
+		"FindNotificationByTeacherID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}/notification",
+		api.FindNotificationByTeacherID,
+	},
+
+	Route{
+		"DeleteTeacherByID",
+		strings.ToUpper("Delete"),
+		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}",
+		api.DeleteTeacherByID,
 	},
 
 	Route{
@@ -293,7 +328,7 @@ var routes = Routes{
 	Route{
 		"UpdateTeacher",
 		strings.ToUpper("Put"),
-		"/xuyendangvan/DemoAPI/1.0.0/teachers",
+		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}",
 		api.UpdateTeacher,
 	},
 
@@ -330,6 +365,13 @@ var routes = Routes{
 		strings.ToUpper("Get"),
 		"/xuyendangvan/DemoAPI/1.0.0/user/logout",
 		api.LogoutUser,
+	},
+
+	Route{
+		"UpdatePassword",
+		strings.ToUpper("Put"),
+		"/xuyendangvan/DemoAPI/1.0.0/user/{id}/updatepassword",
+		api.UpdatePassword,
 	},
 
 	Route{

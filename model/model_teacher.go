@@ -11,18 +11,29 @@
 package swagger
 
 type Teacher struct {
+	Id int64 `json:"id,omitempty"`
 
-	Id int32 `json:"id,omitempty"`
+	UserID int64 `json:"userID,omitempty"`
 
 	Name string `json:"name,omitempty"`
 
 	Email string `json:"email,omitempty"`
 
-	Phone string `json:"phone,omitempty"`
+	LoginName string `json:"loginName,omitempty"`
 
 	Address string `json:"address,omitempty"`
 
-	ClassID int32 `json:"classID,omitempty"`
+	AddressCity string `json:"addressCity,omitempty"`
+
+	AddressDistrict string `json:"addressDistrict,omitempty"`
+
+	AddressStreet string `json:"addressStreet,omitempty"`
+
+	Phone string `json:"phone,omitempty"`
+
+	Photo string `json:"photo,omitempty"`
+
+	Status int32 `json:"status,omitempty"`
 
 	DateCreated string `json:"dateCreated,omitempty"`
 }

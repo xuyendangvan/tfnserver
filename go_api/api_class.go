@@ -11,25 +11,211 @@
 package swagger
 
 import (
+	"encoding/json"
+	"fmt"
+	db "git_source_release/db"
+	model "git_source_release/model"
+	"log"
 	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func AddClass(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var class []model.Class
+	err := decoder.Decode(&class)
+	log.Println(class)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	e := createRecordClass(class)
+	if e != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func createRecordClass(listClass []model.Class) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+	for _, class := range listClass {
+		ID := class.Id
+		YearID := class.YearID
+		Level := class.Level
+		TeacherID := class.TeacherID
+		Name := class.Name
+		DateCreate := time.Now()
+		DateUpdate := time.Now()
+
+		insForm, err := db.SQLExec(tx, "INSERT INTO Class(id, school_year_id, level, teacher_id, name, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?)")
+		if err != nil {
+			return err
+		}
+		if _, err := insForm.Exec(ID, YearID, Level, TeacherID, Name, DateCreate, DateUpdate, 0); err != nil {
+			tx.Rollback()
+			log.Println(err.Error())
+			return err
+		}
+	}
+	tx.Commit()
+	return nil
 }
 
 func DeleteClassByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	e := deleteRecordClass(ID)
+	if e != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func deleteRecordClass(ID string) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+	insForm, err := database.Prepare("DELETE FROM Class WHERE id= ?")
+	if _, err := insForm.Exec(ID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
 func FindClassByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataClassFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
 }
 
+func getDataClassFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Class
+		records []model.Class
+	)
+	rows, err := database.Query("SELECT * FROM Class WHERE id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
+}
+
 func FindClassListByIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	startIndexs, value := r.URL.Query()["startIndex"]
+
+	if !value || len(startIndexs[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	startIndex := startIndexs[0]
+
+	offsets, value := r.URL.Query()["offset"]
+
+	if !value || len(offsets[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	offset := offsets[0]
+
+	jsonResponse := getDataClassFromDBWithIndex(startIndex, offset)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func getDataClassFromDBWithIndex(startIndex string, offset string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Class
+		records []model.Class
+	)
+	limitValue, err := strconv.Atoi(offset)
+	startValue, err := strconv.Atoi(startIndex)
+	rows, err := database.Query("SELECT * FROM Class limit ? offset ?", limitValue, startValue)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
+}
+
+func FindScheduleByClassID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -41,5 +227,52 @@ func FindStudentByClassID(w http.ResponseWriter, r *http.Request) {
 
 func UpdateClass(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	decoder := json.NewDecoder(r.Body)
+	var t model.Class
+	err := decoder.Decode(&t)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	log.Println(t)
+	e := updateRecordClass(ID, t)
+	if e != nil {
+		log.Printf(e.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func updateRecordClass(ID string, t model.Class) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	sid, err := strconv.Atoi(ID)
+	YearID := t.YearID
+	Level := t.Level
+	TeacherID := t.TeacherID
+	Name := t.Name
+	updateDate := time.Now()
+	insForm, err := db.SQLExec(tx, "Update Class Set school_year_id= ?,level = ?,teacher_id= ?,name = ?,date_update= ?, update_count = update_count + 1 where id= ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if _, err := insForm.Exec(YearID, Level, TeacherID, Name, updateDate, sid); err != nil {
+		tx.Rollback()
+		log.Println(err)
+		return err
+	}
+	tx.Commit()
+	return nil
 }

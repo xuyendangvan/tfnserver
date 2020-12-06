@@ -11,6 +11,7 @@
 package swagger
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	db "git_source_release/db"
@@ -192,8 +193,7 @@ func getDataUserFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		var typess string
-		rows.Scan(&data.Id, &typess, &data.Name, &data.Username, &data.Password, &data.Email, &data.UserStatus, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Role, &data.Name, &data.Username, &data.Password, &data.Email, &data.UserStatus, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -268,8 +268,7 @@ func login(username string, password string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		var typess string
-		rows.Scan(&user.Id, &typess, &user.Name, &user.Username, &user.Password, &user.Email, &user.UserStatus, &datecreate, &date, &count)
+		rows.Scan(&user.Id, &user.Role, &user.Name, &user.Username, &user.Password, &user.Email, &user.UserStatus, &datecreate, &date, &count)
 		user.Token = tokenString
 		users = append(users, user)
 		hash = user.Password
@@ -353,4 +352,95 @@ func updateRecordUser(ID string, t model.User) (err error) {
 	}
 	tx.Commit()
 	return nil
+}
+
+func UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	oldPasswords, value := r.URL.Query()["oldpass"]
+
+	if !value || len(oldPasswords[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	oldPassword := oldPasswords[0]
+
+	newPasswords, value := r.URL.Query()["newpass"]
+
+	if !value || len(newPasswords[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	newPassword := newPasswords[0]
+	types, value := r.URL.Query()["type"]
+
+	if !value || len(types[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	typeValue := types[0]
+	e := updatePasswordRecordUser(ID, oldPassword, newPassword, typeValue)
+	if e != nil {
+		log.Printf(e.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func updatePasswordRecordUser(ID string, oldPass string, newPass string, typeValue string) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	var userID int
+	var password string
+	sid, err := strconv.Atoi(ID)
+	value, err := strconv.Atoi(typeValue)
+	dataValue, err := helper.HashPassword(newPass)
+	if value == 1 {
+		userID, err = strconv.Atoi(getDataQuery("SELECT user_id FROM Parent WHERE id= ?", database, sid))
+	} else {
+		userID, err = strconv.Atoi(getDataQuery("SELECT user_id FROM Teacher WHERE id= ?", database, sid))
+	}
+	password = getDataQuery("SELECT password FROM User WHERE id= ?", database, userID)
+	if !helper.CheckPasswordHash(oldPass, password) {
+		return nil
+	}
+	insForm, err := db.SQLExec(tx, "Update User Set password= ? where id= ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if _, err := insForm.Exec(dataValue, userID); err != nil {
+		tx.Rollback()
+		log.Println(err)
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func getDataQuery(query string, database *sql.DB, sid int) string {
+	var result string
+	rows, err := database.Query(query, sid)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	for rows.Next() {
+		rows.Scan(&result)
+	}
+	defer rows.Close()
+	return result
 }

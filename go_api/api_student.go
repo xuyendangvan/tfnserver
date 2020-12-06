@@ -192,7 +192,9 @@ func getDataStudentFromDBWithIndex(startIndex string, offset string) []byte {
 		user    model.Student
 		records []model.Student
 	)
-	rows, err := database.Query("SELECT * FROM Student offset ? limit ?", startIndex, offset)
+	limitValue, err := strconv.Atoi(offset)
+	startValue, err := strconv.Atoi(startIndex)
+	rows, err := database.Query("SELECT * FROM Student limit ? offset ?", limitValue, startValue)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -268,4 +270,19 @@ func updateRecordStudent(ID string, t model.Student) (err error) {
 	}
 	tx.Commit()
 	return nil
+}
+
+func FindStudentActivityByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}
+
+func FindStudentNoticeByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}
+
+func FindStudentTuitionFeeyByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
 }

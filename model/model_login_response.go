@@ -16,7 +16,7 @@ type LoginResponse struct {
 
 	Token string `json:"token,omitempty"`
 
-	Role string `json:"role,omitempty"`
+	Role int32 `json:"role,omitempty"`
 
 	Message string `json:"message,omitempty"`
 }

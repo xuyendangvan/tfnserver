@@ -24,6 +24,8 @@ type Notification struct {
 
 	PosterID int32 `json:"posterID,omitempty"`
 
+	SeenCount int32 `json:"seen_count,omitempty"`
+
 	DateCreated string `json:"dateCreated,omitempty"`
 
 	DateExpired string `json:"dateExpired,omitempty"`

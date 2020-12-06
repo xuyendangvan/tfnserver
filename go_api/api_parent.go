@@ -17,6 +17,7 @@ import (
 	model "git_source_release/model"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -51,7 +52,7 @@ func createRecordParent(parent model.Parent) (err error) {
 		return err
 	}
 	ID := parent.Id
-	//UserID := parent.UserID
+	UserID := parent.UserID
 	Name := parent.Name
 	Email := parent.Email
 	LoginName := parent.LoginName
@@ -67,11 +68,11 @@ func createRecordParent(parent model.Parent) (err error) {
 	//Phone := students.Phone
 	//StudentStatus := students.StudentStatus
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Parent(id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Parent(id,user_id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(ID, UserID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -79,9 +80,62 @@ func createRecordParent(parent model.Parent) (err error) {
 	return nil
 }
 
-func CreateParentWithForm(w http.ResponseWriter, r *http.Request) {
+func UpdateParent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	decoder := json.NewDecoder(r.Body)
+	var t model.Parent
+	err := decoder.Decode(&t)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	log.Println(t)
+	e := updateRecordParent(ID, t)
+	if e != nil {
+		log.Printf(e.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func updateRecordParent(ID string, item model.Parent) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	sid, err := strconv.Atoi(ID)
+	Name := item.Name
+	Email := item.Email
+	LoginName := item.LoginName
+	Address := item.Address
+	AddressCity := item.AddressCity
+	AddressDistrict := item.AddressDistrict
+	AddressStreet := item.AddressStreet
+	Phone := item.Phone
+	//Photo := parent.Photo
+	Status := item.Status
+	DateUpdate := time.Now()
+	insForm, err := db.SQLExec(tx, "Update Parent Set name= ?,login_name= ?, email= ? ,tel= ?,address_city= ?,address_district = ?, address_street = ?,address_ward=?,address=?,status = ?, date_update= ?, update_count = update_count + 1 where id= ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if _, err := insForm.Exec(Name, LoginName, Email, Phone, AddressCity, AddressDistrict, AddressStreet, "ward", Address, Status, DateUpdate, sid); err != nil {
+		tx.Rollback()
+		log.Println(err)
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
 func DeleteParent(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +206,7 @@ func getDataParentFromDB(id string) []byte {
 		var date, datecreate time.Time
 		var count int
 		var password, addressward string
-		rows.Scan(&data.Id, &data.Name, &data.LoginName, &password, &data.Email, &data.Phone, &data.AddressCity, &data.AddressDistrict, &addressward, &data.AddressStreet, &data.Address, &data.Status, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.UserID, &data.Name, &data.LoginName, &password, &data.Email, &data.Phone, &data.AddressCity, &data.AddressDistrict, &addressward, &data.AddressStreet, &data.Address, &data.Status, &datecreate, &date, &count)
 		//user.UpdateDate = h.ConvertDateToString(date, time.RFC3339)
 		data.DateCreated = datecreate.Format(time.RFC3339)
 		//model parent in go different with table parent in database mysql
