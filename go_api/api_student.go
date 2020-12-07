@@ -167,7 +167,7 @@ func FindStudentListByIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	startIndex := startIndexs[0]
 
-	offsets, value := r.URL.Query()["keyword"]
+	offsets, value := r.URL.Query()["offset"]
 
 	if !value || len(offsets[0]) < 1 {
 		log.Println("Url Param 'key' is missing")

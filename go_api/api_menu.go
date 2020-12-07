@@ -11,20 +11,148 @@
 package swagger
 
 import (
+	"encoding/json"
+	"fmt"
+	db "git_source_release/db"
+	model "git_source_release/model"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func CreateMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var menu model.Menu
+	err := decoder.Decode(&menu)
+	log.Println(menu)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	e := createRecordMenu(menu)
+	if e != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func createRecordMenu(menu model.Menu) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+	ID := menu.Id
+	Level := menu.Level
+	Day := menu.Day
+	ClassID := menu.ClassID
+	AssignedDate := menu.AssignedDate
+	Note := menu.Note
+	DateCreate := time.Now()
+	DateUpdate := time.Now()
+	insForm, err := db.SQLExec(tx, "INSERT INTO Menu(id, level, day, class_id, assignedDate, note, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+	if _, err := insForm.Exec(ID, Level, Day, ClassID, AssignedDate, Note, DateCreate, DateUpdate, 0); err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
 func DeleteMenuByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	e := deleteRecordMenu(ID)
+	if e != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
+func deleteRecordMenu(ID string) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+	insForm, err := database.Prepare("DELETE FROM Menu WHERE id= ?")
+	if _, err := insForm.Exec(ID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
 func GetMenuByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataMenuFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func getDataMenuFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Menu
+		records []model.Menu
+	)
+	rows, err := database.Query("SELECT * FROM Menu WHERE id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.Level, &data.Day, &data.ClassID, &data.AssignedDate, &data.Note, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
+}
+
+func GetMenuByDay(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}
+
+func GetMenuDetailByDay(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }

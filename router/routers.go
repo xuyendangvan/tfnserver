@@ -123,6 +123,20 @@ var routes = Routes{
 	},
 
 	Route{
+		"GetMenuByDay",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/menu/day",
+		api.GetMenuByDay,
+	},
+
+	Route{
+		"GetMenuDetailByDay",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/menu/{id}/detail",
+		api.GetMenuDetailByDay,
+	},
+
+	Route{
 		"GetMenuByID",
 		strings.ToUpper("Get"),
 		"/xuyendangvan/DemoAPI/1.0.0/menu/{id}",
@@ -386,5 +400,19 @@ var routes = Routes{
 		strings.ToUpper("Put"),
 		"/xuyendangvan/DemoAPI/1.0.0/user/{id}",
 		api.UpdateUser,
+	},
+
+	Route{
+		"CreateForm",
+		strings.ToUpper("Post"),
+		"/xuyendangvan/DemoAPI/1.0.0/form",
+		api.CreateForm,
+	},
+
+	Route{
+		"UpdateForm",
+		strings.ToUpper("Put"),
+		"/xuyendangvan/DemoAPI/1.0.0/form",
+		api.UpdateForm,
 	},
 }

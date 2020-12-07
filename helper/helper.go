@@ -2,6 +2,7 @@ package swagger
 
 import (
 	"log"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,4 +21,9 @@ func CheckPasswordHash(password, hash string) bool {
 		return false
 	}
 	return true
+}
+
+func ConvertDateToString(date time.Time, format string) string {
+	result := date.Format(format)
+	return result
 }
