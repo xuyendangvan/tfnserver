@@ -11,18 +11,21 @@
 package swagger
 
 type Notice struct {
-
 	Id int32 `json:"id,omitempty"`
 
 	Type_ int32 `json:"type,omitempty"`
+
+	DateOccur string `json:"dateOccur,omitempty"`
 
 	Content string `json:"content,omitempty"`
 
 	ConfirmMessage string `json:"confirmMessage,omitempty"`
 
-	PosterID int32 `json:"posterID,omitempty"`
+	StudentID int32 `json:"studentID,omitempty"`
 
-	ReceiverID int32 `json:"receiverID,omitempty"`
+	ParentID int32 `json:"parentID,omitempty"`
+
+	TeacherID int32 `json:"teacherID,omitempty"`
 
 	DateCreated string `json:"dateCreated,omitempty"`
 

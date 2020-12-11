@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 	db "git_source_release/db"
+	helper "git_source_release/helper"
 	model "git_source_release/model"
 	"log"
 	"net/http"
@@ -274,12 +275,97 @@ func updateRecordStudent(ID string, t model.Student) (err error) {
 
 func FindStudentActivityByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataStudentActivityFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataStudentActivityFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Activity
+		records []model.Activity
+	)
+	rows, err := database.Query("SELECT a.id,a.class_id,a.date_occur,a.date_expire,a.poster_id,a.title,a.content,a.photo1,a.caption1,a.photo2,a.caption2,a.photo3,a.caption3,a.photo4,a.caption4,a.photo5,a.caption5,a.date_create,a.date_update,a.update_count FROM Activity a inner join Student s ON a.class_id = s.class_id WHERE s.id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func FindStudentNoticeByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataStudentNoticeFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataStudentNoticeFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Notice
+		records []model.Notice
+	)
+	rows, err := database.Query("SELECT n.id,n.severity,n.type,n.class_id,n.parent_id,n.date_occur,n.date_expire,n.poster_id,n.title,n.content,n.confirm_message,n.file1,n.caption1,n.file2,n.caption2,n.file3,n.caption3,n.date_create,n.date_update,n.update_count FROM Notice n inner join Student s ON n.class_id = s.class_id and n.parent_id = s.parent_id WHERE s.id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate, date_occur, date_expire time.Time
+		var severity, title, file1, caption1, file2, caption2, file3, caption3 string
+		var count int
+		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &date_occur, &date_expire, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
+		data.DateOccur = helper.ConvertDateToString(date_occur, time.RFC3339)
+		data.DateExpired = helper.ConvertDateToString(date_expire, time.RFC3339)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func FindStudentTuitionFeeyByID(w http.ResponseWriter, r *http.Request) {

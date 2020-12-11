@@ -27,3 +27,12 @@ func ConvertDateToString(date time.Time, format string) string {
 	result := date.Format(format)
 	return result
 }
+
+//ConvertStringToDate ... ConvertStringToDate
+func ConvertStringToDate(date string, format string) (time.Time, error) {
+	result, err := time.Parse(format, date)
+	if err != nil {
+		return time.Now(), err
+	}
+	return result, nil
+}

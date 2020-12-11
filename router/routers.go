@@ -319,6 +319,13 @@ var routes = Routes{
 	},
 
 	Route{
+		"FindActivityByTeacherID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}/activity",
+		api.FindActivityByTeacherID,
+	},
+
+	Route{
 		"DeleteTeacherByID",
 		strings.ToUpper("Delete"),
 		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}",
@@ -384,7 +391,7 @@ var routes = Routes{
 	Route{
 		"UpdatePassword",
 		strings.ToUpper("Put"),
-		"/xuyendangvan/DemoAPI/1.0.0/user/{id}/updatepassword",
+		"/xuyendangvan/DemoAPI/1.0.0/user/{id}/password",
 		api.UpdatePassword,
 	},
 

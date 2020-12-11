@@ -112,12 +112,94 @@ func deleteRecordTeacher(ID string) (err error) {
 
 func FindClassByTeacherID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataClassByTeacherFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataClassByTeacherFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Class
+		records []model.Class
+	)
+	rows, err := database.Query("SELECT c.id,c.school_year_id,c.level,c.teacher_id,c.name,c.date_create,c.date_update,c.update_count FROM Teacher t inner join Class c ON t.id = c.teacher_id WHERE t.id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func FindNotificationByTeacherID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataNotificationByTeacherFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataNotificationByTeacherFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Notification
+		records []model.Notification
+	)
+	rows, err := database.Query("SELECT n.id,n.type,n.priority,n.title,n.content,n.poster_id,n.seen_count,n.expired_date,n.created_date,n.update_date,n.update_count FROM Teacher t inner join Notification n ON t.id = n.poster_id WHERE t.id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 func FindTeacherByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -289,4 +371,50 @@ func updateRecordTeacher(ID string, item model.Teacher) (err error) {
 	}
 	tx.Commit()
 	return nil
+}
+
+func FindActivityByTeacherID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataActivityByTeacherFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func getDataActivityByTeacherFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Activity
+		records []model.Activity
+	)
+	rows, err := database.Query("SELECT a.id,a.class_id,a.date_occur,a.date_expire,a.poster_id,a.title,a.content,a.photo1,a.caption1,a.photo2,a.caption2,a.photo3,a.caption3,a.photo4,a.caption4,a.photo5,a.caption5,a.date_create,a.date_update,a.update_count FROM Activity a inner join Teacher t ON a.poster_id = t.id WHERE t.id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }

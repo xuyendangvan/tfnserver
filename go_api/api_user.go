@@ -361,32 +361,15 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	ID := mux.Vars(r)["id"]
 	log.Printf(ID)
-	oldPasswords, value := r.URL.Query()["oldpass"]
-
-	if !value || len(oldPasswords[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
-		w.WriteHeader(http.StatusNotFound)
+	decoder := json.NewDecoder(r.Body)
+	var data model.PasswordParam
+	err := decoder.Decode(&data)
+	log.Println(data)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	oldPassword := oldPasswords[0]
-
-	newPasswords, value := r.URL.Query()["newpass"]
-
-	if !value || len(newPasswords[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	newPassword := newPasswords[0]
-	types, value := r.URL.Query()["type"]
-
-	if !value || len(types[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	typeValue := types[0]
-	e := updatePasswordRecordUser(ID, oldPassword, newPassword, typeValue)
+	e := updatePasswordRecordUser(ID, data)
 	if e != nil {
 		log.Printf(e.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -395,7 +378,7 @@ func UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func updatePasswordRecordUser(ID string, oldPass string, newPass string, typeValue string) (err error) {
+func updatePasswordRecordUser(ID string, data model.PasswordParam) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -406,15 +389,14 @@ func updatePasswordRecordUser(ID string, oldPass string, newPass string, typeVal
 	var userID int
 	var password string
 	sid, err := strconv.Atoi(ID)
-	value, err := strconv.Atoi(typeValue)
-	dataValue, err := helper.HashPassword(newPass)
-	if value == 1 {
+	dataValue, err := helper.HashPassword(data.NewPassword)
+	if data.Type == 1 {
 		userID, err = strconv.Atoi(getDataQuery("SELECT user_id FROM Parent WHERE id= ?", database, sid))
 	} else {
 		userID, err = strconv.Atoi(getDataQuery("SELECT user_id FROM Teacher WHERE id= ?", database, sid))
 	}
 	password = getDataQuery("SELECT password FROM User WHERE id= ?", database, userID)
-	if !helper.CheckPasswordHash(oldPass, password) {
+	if !helper.CheckPasswordHash(data.OldPassword, password) {
 		return nil
 	}
 	insForm, err := db.SQLExec(tx, "Update User Set password= ? where id= ?")

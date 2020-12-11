@@ -53,16 +53,16 @@ func createRecordMenu(menu model.Menu) (err error) {
 	ID := menu.Id
 	Level := menu.Level
 	Day := menu.Day
-	ClassID := menu.ClassID
+	//ClassID := menu.ClassID
 	AssignedDate := menu.AssignedDate
 	Note := menu.Note
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
-	insForm, err := db.SQLExec(tx, "INSERT INTO Menu(id, level, day, class_id, assignedDate, note, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Menu_detail(id, menu_id, session_id, food_name, note, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, Level, Day, ClassID, AssignedDate, Note, DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(ID, Day, Level, AssignedDate, Note, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -92,7 +92,7 @@ func deleteRecordMenu(ID string) (err error) {
 	if err != nil {
 		return err
 	}
-	insForm, err := database.Prepare("DELETE FROM Menu WHERE id= ?")
+	insForm, err := database.Prepare("DELETE FROM Menu_detail WHERE id= ?")
 	if _, err := insForm.Exec(ID); err != nil {
 		tx.Rollback()
 		return err
@@ -124,7 +124,7 @@ func getDataMenuFromDB(id string) []byte {
 		data    model.Menu
 		records []model.Menu
 	)
-	rows, err := database.Query("SELECT * FROM Menu WHERE id= ?", id)
+	rows, err := database.Query("SELECT * FROM Menu_detail WHERE id= ?", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -132,7 +132,7 @@ func getDataMenuFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.Level, &data.Day, &data.ClassID, &data.AssignedDate, &data.Note, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Day, &data.Level, &data.AssignedDate, &data.Note, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
