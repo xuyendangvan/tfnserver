@@ -171,7 +171,49 @@ func deleteRecordParent(ID string) (err error) {
 
 func FindStudentByParentID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataStudentByParentFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataStudentByParentFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Student
+		records []model.Student
+	)
+	rows, err := database.Query("SELECT * FROM Student s WHERE s.parent_id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		var face_photo string
+		rows.Scan(&data.Id, &data.ParentID, &data.ClassID, &data.Name, &data.Birthday, &face_photo, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func GetParentById(w http.ResponseWriter, r *http.Request) {
@@ -226,7 +268,95 @@ func getDataParentFromDB(id string) []byte {
 
 func GetParentNotification(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataNotificationByParentFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataNotificationByParentFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Notification
+		records []model.Notification
+	)
+	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 1 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
+}
+
+func GetFormsByParentID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataFormByParentFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func getDataFormByParentFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Form
+		records []model.Form
+	)
+	rows, err := database.Query("SELECT a.id,a.repeat_id,a.student_id,a.application_date,a.application_time,a.type,a.note,a.meal_absent1,a.meal_absent2,a.meal_absent3,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		var meal_absent1, meal_absent2, meal_absent3, picker_name, picker_face_photo, direction, approved, approver string
+		rows.Scan(&data.Id, &data.PosterID, &data.StudentID, &data.DateRequest, &data.TimeRequest, &data.Type_, &data.Content, &meal_absent1, &meal_absent2, &meal_absent3, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func UpdateParenNotificationStatus(w http.ResponseWriter, r *http.Request) {

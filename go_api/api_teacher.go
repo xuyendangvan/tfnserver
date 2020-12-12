@@ -179,7 +179,7 @@ func getDataNotificationByTeacherFromDB(id string) []byte {
 		data    model.Notification
 		records []model.Notification
 	)
-	rows, err := database.Query("SELECT n.id,n.type,n.priority,n.title,n.content,n.poster_id,n.seen_count,n.expired_date,n.created_date,n.update_date,n.update_count FROM Teacher t inner join Notification n ON t.id = n.poster_id WHERE t.id= ?", id)
+	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 2 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
 	if err != nil {
 		fmt.Println(err)
 		return nil

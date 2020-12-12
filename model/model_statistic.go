@@ -22,12 +22,13 @@ type Statistic struct {
 
 	Total int32 `json:"total,omitempty"`
 
-	AbsencecDays int32 `json:"absencecDays,omitempty"`
+	// Nghi khong phep
+	Absences int32 `json:"absences,omitempty"`
 
 	// Nghi co phep
-	RequestedAbsenceDays int32 `json:"requestedAbsenceDays,omitempty"`
+	RequestedAbsences int32 `json:"requestedAbsences,omitempty"`
 
-	CancelMeals int32 `json:"cancelMeals,omitempty"`
+	UsedMeals int32 `json:"usedMeals,omitempty"`
 
 	DateCreated string `json:"dateCreated,omitempty"`
 }

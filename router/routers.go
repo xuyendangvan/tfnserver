@@ -214,6 +214,13 @@ var routes = Routes{
 	},
 
 	Route{
+		"GetFormsByParentID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/parent/{id}/form",
+		api.GetFormsByParentID,
+	},
+
+	Route{
 		"UpdateParenNotificationStatus",
 		strings.ToUpper("Put"),
 		"/xuyendangvan/DemoAPI/1.0.0/parent/{id}/notifications",
@@ -421,5 +428,19 @@ var routes = Routes{
 		strings.ToUpper("Put"),
 		"/xuyendangvan/DemoAPI/1.0.0/form",
 		api.UpdateForm,
+	},
+
+	Route{
+		"GetStatisticForClass",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/statistic/classes/{id}",
+		api.GetStatisticForClass,
+	},
+
+	Route{
+		"GetStatisticForStudent",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/statistic/students/{id}",
+		api.GetStatisticForStudent,
 	},
 }

@@ -222,7 +222,49 @@ func FindScheduleByClassID(w http.ResponseWriter, r *http.Request) {
 
 func FindStudentByClassID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataStudentByClassFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataStudentByClassFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.Student
+		records []model.Student
+	)
+	rows, err := database.Query("SELECT * FROM Student s WHERE s.class_id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		var face_photo string
+		rows.Scan(&data.Id, &data.ParentID, &data.ClassID, &data.Name, &data.Birthday, &face_photo, &datecreate, &date, &count)
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func UpdateClass(w http.ResponseWriter, r *http.Request) {

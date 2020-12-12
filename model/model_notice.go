@@ -17,7 +17,7 @@ type Notice struct {
 
 	DateOccur string `json:"dateOccur,omitempty"`
 
-	Content string `json:"content,omitempty"`
+	Content []string `json:"content,omitempty"`
 
 	ConfirmMessage string `json:"confirmMessage,omitempty"`
 

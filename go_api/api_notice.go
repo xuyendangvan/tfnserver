@@ -64,15 +64,16 @@ func createRecordNotice(listNotice []model.Notice) (err error) {
 		DateExpired := notice.DateExpired
 		DateCreate := time.Now()
 		DateUpdate := time.Now()
-
-		insForm, err := db.SQLExec(tx, "INSERT INTO Notice(id,severity,type,class_id,parent_id,date_occur,date_expire,poster_id,title,content,confirm_message,file1,caption1,file2,caption2,file3,caption3,date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-		if err != nil {
-			return err
-		}
-		if _, err := insForm.Exec(ID, 1, Type, StudentID, ParentID, DateOccur, DateExpired, TeacherID, "title", Content, ConfirmMessage, "file1", "caption1", "file2", "caption2", "file3", "caption3", DateCreate, DateUpdate, 0); err != nil {
-			tx.Rollback()
-			log.Println(err.Error())
-			return err
+		for _, contentValue := range Content {
+			insForm, err := db.SQLExec(tx, "INSERT INTO Notice(id,severity,type,class_id,parent_id,date_occur,date_expire,poster_id,title,content,confirm_message,file1,caption1,file2,caption2,file3,caption3,date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+			if err != nil {
+				return err
+			}
+			if _, err := insForm.Exec(ID, 1, Type, StudentID, ParentID, DateOccur, DateExpired, TeacherID, "title", contentValue, ConfirmMessage, "file1", "caption1", "file2", "caption2", "file3", "caption3", DateCreate, DateUpdate, 0); err != nil {
+				tx.Rollback()
+				log.Println(err.Error())
+				return err
+			}
 		}
 	}
 	tx.Commit()
@@ -188,15 +189,17 @@ func updateRecordNotice(ID string, notice model.Notice) (err error) {
 	TeacherID := notice.TeacherID
 	DateExpired := notice.DateExpired
 	updateDate := time.Now()
-	insForm, err := db.SQLExec(tx, "Update Notice Set type= ?,date_occur = ?,date_expired=?,content= ?,confirm_message = ?,class_id=?,parent_id=?,poster_id=?,date_update= ?, update_count = update_count + 1 where id= ?")
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	if _, err := insForm.Exec(Type, DateOccur, DateExpired, Content, ConfirmMessage, StudentID, ParentID, TeacherID, updateDate, sid); err != nil {
-		tx.Rollback()
-		log.Println(err)
-		return err
+	for _, contentValue := range Content {
+		insForm, err := db.SQLExec(tx, "Update Notice Set type= ?,date_occur = ?,date_expired=?,content= ?,confirm_message = ?,class_id=?,parent_id=?,poster_id=?,date_update= ?, update_count = update_count + 1 where id= ?")
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if _, err := insForm.Exec(Type, DateOccur, DateExpired, contentValue, ConfirmMessage, StudentID, ParentID, TeacherID, updateDate, sid); err != nil {
+			tx.Rollback()
+			log.Println(err)
+			return err
+		}
 	}
 	tx.Commit()
 	return nil
