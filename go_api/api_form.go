@@ -59,15 +59,18 @@ func createRecordForm(form model.Form) (err error) {
 	Content := form.Content
 	DateRequest := form.DateRequest
 	TimeRequest := form.TimeRequest
-	//CancelMeal := form.CancelMeal ???
+	CancelMeal := form.CancelMeal
+	LateMeal := form.LateMeal
+	PickerName := form.PickerName
+	PickerPhoto := form.PickerPhoto
 	//IsCancelMeal := form.IsCancelMeal ???
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
-	insForm, err := db.SQLExec(tx, "INSERT INTO Application(id,repeat_id,student_id,application_date,application_time,type,note,meal_absent1,meal_absent2,meal_absent3,picker_name,picker_face_photo,direction,approved,approver, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Application(id,repeat_id,student_id,application_date,application_time,type,note,meal_absent,late_meal,picker_name,picker_face_photo,direction,approved,approver, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, PosterID, StudentID, DateRequest, TimeRequest, Type, Content, "meal_absent1", "meal_absent2", "meal_absent3", "picker_name", "picker_face_photo", "direction", "approved", "approver", DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(ID, PosterID, StudentID, DateRequest, TimeRequest, Type, Content, CancelMeal, LateMeal, PickerName, PickerPhoto, "direction", "approved", "approver", DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -116,15 +119,18 @@ func updateRecordForm(ID string, t model.Form) (err error) {
 	Content := t.Content
 	DateRequest := t.DateRequest
 	TimeRequest := t.TimeRequest
-	//CancelMeal := t.CancelMeal ???
+	CancelMeal := t.CancelMeal
+	LateMeal := t.LateMeal
+	PickerName := t.PickerName
+	PickerPhoto := t.PickerPhoto
 	//IsCancelMeal := t.IsCancelMeal ???
 	updateDate := time.Now()
-	insForm, err := db.SQLExec(tx, "Update Application Set repeat_id=?,student_id=?,application_date=?,application_time=?,type=?,note=?,meal_absent1=?,meal_absent2=?,meal_absent3=?,picker_name=?,picker_face_photo=?,direction=?,approved=?,approver=?,date_update= ?, update_count = update_count + 1 where id= ?")
+	insForm, err := db.SQLExec(tx, "Update Application Set repeat_id=?,student_id=?,application_date=?,application_time=?,type=?,note=?,meal_absent=?,late_meal=?,picker_name=?,picker_face_photo=?,direction=?,approved=?,approver=?,date_update= ?, update_count = update_count + 1 where id= ?")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	if _, err := insForm.Exec(PosterID, StudentID, DateRequest, TimeRequest, Type, Content, "meal_absent1", "meal_absent2", "meal_absent3", "picker_name", "picker_face_photo", "direction", "approved", "approver", updateDate, sid); err != nil {
+	if _, err := insForm.Exec(PosterID, StudentID, DateRequest, TimeRequest, Type, Content, CancelMeal, LateMeal, PickerName, PickerPhoto, "direction", "approved", "approver", updateDate, sid); err != nil {
 		tx.Rollback()
 		log.Println(err)
 		return err

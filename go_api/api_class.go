@@ -243,7 +243,7 @@ func getDataStudentByClassFromDB(id string) []byte {
 		data    model.Student
 		records []model.Student
 	)
-	rows, err := database.Query("SELECT * FROM Student s WHERE s.class_id= ?", id)
+	rows, err := database.Query("SELECT s.id,s.parent_id,s.class_id,s.name,s.birthday,s.face_photo,s.date_create,s.date_update,s.update_count,a.type FROM Student s inner join Application a ON s.id = a.student_id WHERE s.class_id= ?", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -252,7 +252,7 @@ func getDataStudentByClassFromDB(id string) []byte {
 		var date, datecreate time.Time
 		var count int
 		var face_photo string
-		rows.Scan(&data.Id, &data.ParentID, &data.ClassID, &data.Name, &data.Birthday, &face_photo, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.ParentID, &data.ClassID, &data.Name, &data.Birthday, &face_photo, &datecreate, &date, &count, &data.StudentStatus)
 		records = append(records, data)
 	}
 	defer rows.Close()

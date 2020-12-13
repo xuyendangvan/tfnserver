@@ -10,28 +10,25 @@
 
 package swagger
 
-type TuitionFee struct {
+type StudentStatistic struct {
+
 	Id int32 `json:"id,omitempty"`
 
 	Quater int32 `json:"quater,omitempty"`
 
-	Paid int32 `json:"paid,omitempty"`
+	StudentID int32 `json:"studentID,omitempty"`
 
 	ClassID int32 `json:"classID,omitempty"`
 
-	StudentID int32 `json:"studentID,omitempty"`
-
 	Total int32 `json:"total,omitempty"`
 
-	Tuition int32 `json:"tuition,omitempty"`
+	// Nghi khong phep
+	Absences int32 `json:"absences,omitempty"`
 
-	Food int32 `json:"food,omitempty"`
+	// Nghi co phep
+	RequestedAbsences int32 `json:"requestedAbsences,omitempty"`
 
-	Bus int32 `json:"bus,omitempty"`
-
-	Refund int32 `json:"refund,omitempty"`
-
-	Other int32 `json:"other,omitempty"`
+	UsedMeals int32 `json:"usedMeals,omitempty"`
 
 	DateCreated string `json:"dateCreated,omitempty"`
 }

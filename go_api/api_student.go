@@ -203,8 +203,6 @@ func getDataStudentFromDBWithIndex(startIndex string, offset string) []byte {
 		var count int
 		var face_photo string
 		rows.Scan(&user.Id, &user.ParentID, &user.ClassID, &user.Name, &user.Birthday, &face_photo, &datecreate, &date, &count)
-		//user.UpdateDate = h.ConvertDateToString(date, time.RFC3339)
-		//model student in go different with table student in database mysql
 		records = append(records, user)
 	}
 	defer rows.Close()

@@ -11,15 +11,142 @@
 package swagger
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	db "git_source_release/db"
+	model "git_source_release/model"
+	"log"
 	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func GetStatisticForClass(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataStatisticClassFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataStatisticClassFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.AdminStatistic
+		records []model.AdminStatistic
+	)
+	sid, _ := strconv.Atoi(id)
+	data.TotalStudents = getDataIntQuery("SELECT Count(*) FROM Student s WHERE s.class_id= ?", database, sid)
+	data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a inner join Student s On a.student_id = s.id WHERE a.status = 1 and DATEDIFF(a.attendance_date, CURDATE()) = 0 and s.class_id= ?", database, sid)
+	data.Absences = data.TotalStudents - data.RequestedAbsences
+	data.MorningMeals = getDataIntQuery("SELECT Count(*) FROM Application a inner join Student s On a.student_id = s.id WHERE a.meal_absent = 1 and DATEDIFF(a.application_date, CURDATE()) = 0 and s.class_id= ?", database, sid)
+	data.NoonMeals = getDataIntQuery("SELECT Count(*) FROM Application a inner join Student s On a.student_id = s.id WHERE a.meal_absent = 2 and DATEDIFF(a.application_date, CURDATE()) = 0 and s.class_id= ?", database, sid)
+	data.AfternoonMeals = getDataIntQuery("SELECT Count(*) FROM Application a inner join Student s On a.student_id = s.id WHERE a.meal_absent = 3 and DATEDIFF(a.application_date, CURDATE()) = 0 and s.class_id= ?", database, sid)
+	data.LateMeals = getDataIntQuery("SELECT Count(*) FROM Application a inner join Student s On a.student_id = s.id WHERE a.late_meal = 1 and DATEDIFF(a.application_date, CURDATE()) = 0 and s.class_id= ?", database, sid)
+	data.LatePickup = getDataIntQuery("SELECT Count(*) FROM Application a inner join Student s On a.student_id = s.id WHERE a.type = 2 and DATEDIFF(a.application_date, CURDATE()) = 0 and s.class_id= ?", database, sid)
+	data.Id = 1
+	data.ClassID = int32(sid)
+	data.DateCreated = time.Now().Format("2006-01-02 15:04:05")
+	records = append(records, data)
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
 
 func GetStatisticForStudent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataStatisticStudentFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getDataStatisticStudentFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.StudentStatistic
+		records []model.StudentStatistic
+	)
+	var month int32 = int32(time.Now().Month())
+	var year int = time.Now().Year()
+	data.Quater = (month / 3) + 1
+	data.Total = 6 * 4 * 3
+	sid, _ := strconv.Atoi(id)
+	queryAttendance := getQueryValue(data.Quater, year, "attentdance_date")
+	queryApplication := getQueryValue(data.Quater, year, "application_date")
+	data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 2 and"+queryAttendance, database, sid)
+	data.Absences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 3 and"+queryAttendance, database, sid)
+	data.UsedMeals = getDataIntQuery("SELECT Count(*) FROM Application a WHERE a.student_id = ? and"+queryApplication, database, sid)
+	data.Id = 1
+	data.StudentID = int32(sid)
+	data.DateCreated = time.Now().Format("2006-01-02 15:04:05")
+	records = append(records, data)
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
+}
+
+func getQueryValue(quater int32, years int, field string) string {
+	var query string
+	year := strconv.Itoa(years)
+	switch quater {
+	case 1:
+		query = field + " BETWEEN '" + year + "-01-01'AND '" + year + "-03-30'"
+	case 2:
+		query = field + " BETWEEN '" + year + "-04-01'AND '" + year + "-06-30'"
+	case 3:
+		query = field + " BETWEEN '" + year + "-07-01'AND '" + year + "-09-30'"
+	case 4:
+		query = field + " BETWEEN '" + year + "-010-01'AND '" + year + "-12-31'"
+	default:
+		query = field + " BETWEEN '" + year + "-01-01'AND '" + year + "-03-30'"
+	}
+	return query
+}
+
+func getDataIntQuery(query string, database *sql.DB, sid int) int32 {
+	var result int32
+	rows, err := database.Query(query, sid)
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+	for rows.Next() {
+		rows.Scan(&result)
+	}
+	defer rows.Close()
+	return result
 }

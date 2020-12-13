@@ -60,6 +60,20 @@ var routes = Routes{
 	},
 
 	Route{
+		"CalculateTuitionFee",
+		strings.ToUpper("Post"),
+		"/xuyendangvan/DemoAPI/1.0.0/admin/tuitionfee/{id}",
+		api.CalculateTuitionFee,
+	},
+
+	Route{
+		"GetFeedbacks",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/admin/feedback",
+		api.GetFeedbacks,
+	},
+
+	Route{
 		"AddClass",
 		strings.ToUpper("Post"),
 		"/xuyendangvan/DemoAPI/1.0.0/classes",

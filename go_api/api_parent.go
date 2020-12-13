@@ -361,5 +361,66 @@ func getDataFormByParentFromDB(id string) []byte {
 
 func UpdateParenNotificationStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	parentIDs, value := r.URL.Query()["parentID"]
+
+	if !value || len(parentIDs[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	parentID := parentIDs[0]
+
+	notificationIDs, value := r.URL.Query()["notificationID"]
+
+	if !value || len(notificationIDs[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	notificationID := notificationIDs[0]
+
+	e := updateNotificationStatus(parentID, notificationID)
+	if e != nil {
+		log.Printf(e.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func updateNotificationStatus(parentID string, notificationID string) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	sid, err := strconv.Atoi(parentID)
+	nid, err := strconv.Atoi(notificationID)
+	DateUpdate := time.Now()
+	var id int
+	rows, err := database.Query("SELECT id FROM Parent_Notification s WHERE s.parent_id= ? and s.notification_id= ?", sid, nid)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		rows.Scan(&id)
+	}
+	insForm, err := db.SQLExec(tx, "Update Parent_Notification Set date_update= ?, update_count = update_count + 1 where id= ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if _, err := insForm.Exec(DateUpdate, id); err != nil {
+		tx.Rollback()
+		log.Println(err)
+		return err
+	}
+	tx.Commit()
+	return nil
 }

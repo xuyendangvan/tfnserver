@@ -21,6 +21,12 @@ type Form struct {
 
 	PosterID int32 `json:"posterID,omitempty"`
 
+	PickerName string `json:"pickerName,omitempty"`
+
+	PickerPhone string `json:"pickerPhone,omitempty"`
+
+	PickerPhoto string `json:"pickerPhoto,omitempty"`
+
 	// class: 1- sang, 2- chieu
 	ClassTime string `json:"classTime,omitempty"`
 
