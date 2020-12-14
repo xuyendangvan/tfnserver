@@ -12,7 +12,7 @@ func DBConn() (db *sql.DB) {
 	dbUser := "root"
 	dbPass := "2020NhatTuan"
 	dbName := "kindergarten"
-	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(localhost:3306)/"+dbName)
+	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(localhost:3306)/"+dbName+"?parseTime=true")
 	if err != nil {
 		panic(err.Error())
 	}

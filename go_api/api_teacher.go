@@ -52,7 +52,6 @@ func createRecordTeachers(list []model.Teacher) (err error) {
 		return err
 	}
 	for _, item := range list {
-		ID := item.Id
 		UserID := item.UserID
 		Name := item.Name
 		Email := item.Email
@@ -66,11 +65,11 @@ func createRecordTeachers(list []model.Teacher) (err error) {
 		DateCreated := time.Now()
 		DateUpdate := time.Now()
 
-		insForm, err := db.SQLExec(tx, "INSERT INTO Teacher(id,user_id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+		insForm, err := db.SQLExec(tx, "INSERT INTO Teacher(user_id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 		if err != nil {
 			return err
 		}
-		if _, err := insForm.Exec(ID, UserID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
+		if _, err := insForm.Exec(UserID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
 			tx.Rollback()
 			return err
 		}

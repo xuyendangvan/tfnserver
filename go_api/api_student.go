@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"fmt"
 	db "git_source_release/db"
-	helper "git_source_release/helper"
 	model "git_source_release/model"
 	"log"
 	"net/http"
@@ -52,7 +51,6 @@ func createRecordStudents(students model.Student) (err error) {
 	if err != nil {
 		return err
 	}
-	ID := students.Id
 	ClassID := students.ClassID
 	ParentID := students.ParentID
 	Name := students.Name
@@ -62,11 +60,11 @@ func createRecordStudents(students model.Student) (err error) {
 	//Phone := students.Phone
 	//StudentStatus := students.StudentStatus
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Student(id, parent_id, class_id, name, birthday, face_photo, date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Student(parent_id, class_id, name, birthday, face_photo, date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, ParentID, ClassID, Name, Birthday, "", DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(ParentID, ClassID, Name, Birthday, "", DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -255,7 +253,7 @@ func updateRecordStudent(ID string, t model.Student) (err error) {
 	Name := t.Name
 	Birthday := t.Birthday
 	updateDate := time.Now()
-	insForm, err := db.SQLExec(tx, "Update Student Set parent_id= ?,class_id= ?, name= ? ,birthday= ?,date_update= ?, update_count = update_count + 1, where id= ?")
+	insForm, err := db.SQLExec(tx, "Update Student Set parent_id= ?,class_id= ?, name= ? ,birthday= ?,date_update= ?, update_count = update_count + 1 where id= ?")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -344,12 +342,10 @@ func getDataStudentNoticeFromDB(id string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate, date_occur, date_expire time.Time
+		var date, datecreate time.Time
 		var severity, title, file1, caption1, file2, caption2, file3, caption3 string
 		var count int
-		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &date_occur, &date_expire, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
-		data.DateOccur = helper.ConvertDateToString(date_occur, time.RFC3339)
-		data.DateExpired = helper.ConvertDateToString(date_expire, time.RFC3339)
+		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()

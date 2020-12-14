@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"fmt"
 	db "git_source_release/db"
-	helper "git_source_release/helper"
 	model "git_source_release/model"
 	"log"
 	"net/http"
@@ -53,7 +52,6 @@ func createRecordNotice(listNotice []model.Notice) (err error) {
 		return err
 	}
 	for _, notice := range listNotice {
-		ID := notice.Id
 		Type := notice.Type_
 		DateOccur := notice.DateOccur
 		Content := notice.Content
@@ -65,11 +63,11 @@ func createRecordNotice(listNotice []model.Notice) (err error) {
 		DateCreate := time.Now()
 		DateUpdate := time.Now()
 		for _, contentValue := range Content {
-			insForm, err := db.SQLExec(tx, "INSERT INTO Notice(id,severity,type,class_id,parent_id,date_occur,date_expire,poster_id,title,content,confirm_message,file1,caption1,file2,caption2,file3,caption3,date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+			insForm, err := db.SQLExec(tx, "INSERT INTO Notice(severity,type,class_id,parent_id,date_occur,date_expire,poster_id,title,content,confirm_message,file1,caption1,file2,caption2,file3,caption3,date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 			if err != nil {
 				return err
 			}
-			if _, err := insForm.Exec(ID, 1, Type, StudentID, ParentID, DateOccur, DateExpired, TeacherID, "title", contentValue, ConfirmMessage, "file1", "caption1", "file2", "caption2", "file3", "caption3", DateCreate, DateUpdate, 0); err != nil {
+			if _, err := insForm.Exec(1, Type, StudentID, ParentID, DateOccur, DateExpired, TeacherID, "title", contentValue, ConfirmMessage, "file1", "caption1", "file2", "caption2", "file3", "caption3", DateCreate, DateUpdate, 0); err != nil {
 				tx.Rollback()
 				log.Println(err.Error())
 				return err
@@ -127,12 +125,10 @@ func getDataNoticeFromDBWithIndex(startIndex string, offset string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate, date_occur, date_expire time.Time
+		var date, datecreate time.Time
 		var severity, title, file1, caption1, file2, caption2, file3, caption3 string
 		var count int
-		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &date_occur, &date_expire, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
-		data.DateOccur = helper.ConvertDateToString(date_occur, time.RFC3339)
-		data.DateExpired = helper.ConvertDateToString(date_expire, time.RFC3339)
+		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()

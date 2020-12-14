@@ -10,8 +10,9 @@
 
 package swagger
 
-type Form struct {
+import "time"
 
+type Form struct {
 	Id int64 `json:"id,omitempty"`
 
 	// type: 1- nghi hoc, 2- don tre, 3- huy bua
@@ -34,9 +35,9 @@ type Form struct {
 
 	Content string `json:"content,omitempty"`
 
-	DateRequest string `json:"dateRequest,omitempty"`
+	DateRequest time.Time `json:"dateRequest,omitempty"`
 
-	TimeRequest string `json:"timeRequest,omitempty"`
+	TimeRequest time.Time `json:"timeRequest,omitempty"`
 
 	// Meal: 1- sang, 2- chieu, 3-xe, 4-ca ngay
 	CancelMeal int32 `json:"cancelMeal,omitempty"`

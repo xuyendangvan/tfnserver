@@ -50,7 +50,6 @@ func createRecordMenu(menu model.Menu) (err error) {
 	if err != nil {
 		return err
 	}
-	ID := menu.Id
 	Level := menu.Level
 	Day := menu.Day
 	//ClassID := menu.ClassID
@@ -58,11 +57,11 @@ func createRecordMenu(menu model.Menu) (err error) {
 	Note := menu.Note
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
-	insForm, err := db.SQLExec(tx, "INSERT INTO Menu_detail(id, menu_id, session_id, food_name, note, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Menu_detail(menu_id, session_id, food_name, note, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, Day, Level, AssignedDate, Note, DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(Day, Level, AssignedDate, Note, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}

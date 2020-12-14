@@ -10,8 +10,9 @@
 
 package swagger
 
-type Notification struct {
+import "time"
 
+type Notification struct {
 	Id int32 `json:"id,omitempty"`
 
 	Priority int32 `json:"priority,omitempty"`
@@ -28,5 +29,5 @@ type Notification struct {
 
 	DateCreated string `json:"dateCreated,omitempty"`
 
-	DateExpired string `json:"dateExpired,omitempty"`
+	DateExpired time.Time `json:"dateExpired,omitempty"`
 }

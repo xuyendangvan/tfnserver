@@ -11,7 +11,6 @@
 package swagger
 
 type Menu struct {
-
 	Id int64 `json:"id,omitempty"`
 
 	Level int32 `json:"level,omitempty"`

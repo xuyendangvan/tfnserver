@@ -52,7 +52,6 @@ func createRecordClass(listClass []model.Class) (err error) {
 		return err
 	}
 	for _, class := range listClass {
-		ID := class.Id
 		YearID := class.YearID
 		Level := class.Level
 		TeacherID := class.TeacherID
@@ -60,11 +59,11 @@ func createRecordClass(listClass []model.Class) (err error) {
 		DateCreate := time.Now()
 		DateUpdate := time.Now()
 
-		insForm, err := db.SQLExec(tx, "INSERT INTO Class(id, school_year_id, level, teacher_id, name, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?)")
+		insForm, err := db.SQLExec(tx, "INSERT INTO Class(school_year_id, level, teacher_id, name, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?)")
 		if err != nil {
 			return err
 		}
-		if _, err := insForm.Exec(ID, YearID, Level, TeacherID, Name, DateCreate, DateUpdate, 0); err != nil {
+		if _, err := insForm.Exec(YearID, Level, TeacherID, Name, DateCreate, DateUpdate, 0); err != nil {
 			tx.Rollback()
 			log.Println(err.Error())
 			return err

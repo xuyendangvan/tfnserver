@@ -83,7 +83,6 @@ func createRecordTuitionFee(fees []model.TuitionFee) (err error) {
 		return err
 	}
 	for _, fee := range fees {
-		ID := fee.Id
 		//Quater := fee.Quater
 		Paid := fee.Paid
 		//ClassID := fee.ClassID
@@ -99,11 +98,11 @@ func createRecordTuitionFee(fees []model.TuitionFee) (err error) {
 		//Phone := students.Phone
 		//StudentStatus := students.StudentStatus
 
-		insForm, err := db.SQLExec(tx, "INSERT INTO Tuition_fee(id, student_id, tuition_fee, cleaning_fee, bus_fee, meal_fee, refund,total,status,date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)")
+		insForm, err := db.SQLExec(tx, "INSERT INTO Tuition_fee(student_id, tuition_fee, cleaning_fee, bus_fee, meal_fee, refund,total,status,date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
 		if err != nil {
 			return err
 		}
-		if _, err := insForm.Exec(ID, StudentID, Tuition, Other, Bus, Food, Refund, Total, Paid, DateCreate, DateUpdate, 0); err != nil {
+		if _, err := insForm.Exec(StudentID, Tuition, Other, Bus, Food, Refund, Total, Paid, DateCreate, DateUpdate, 0); err != nil {
 			tx.Rollback()
 			return err
 		}

@@ -51,7 +51,6 @@ func createRecordNotification(noti model.Notification) (err error) {
 	if err != nil {
 		return err
 	}
-	ID := noti.Id
 	Priority := noti.Priority
 	Type := noti.Type_
 	Title := noti.Title
@@ -62,11 +61,11 @@ func createRecordNotification(noti model.Notification) (err error) {
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Notification(id, type, piority, title, content, poster_id, seen_count,expired_date, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Notification(type, priority, title, content, poster_id, seen_count,expired_date, created_date,update_date, update_count) VALUES(?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, Type, Priority, Title, Content, PosterID, SeenCount, DateExpired, DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(Type, Priority, Title, Content, PosterID, SeenCount, DateExpired, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}

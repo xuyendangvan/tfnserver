@@ -10,12 +10,14 @@
 
 package swagger
 
+import "time"
+
 type Notice struct {
 	Id int32 `json:"id,omitempty"`
 
 	Type_ int32 `json:"type,omitempty"`
 
-	DateOccur string `json:"dateOccur,omitempty"`
+	DateOccur time.Time `json:"dateOccur,omitempty"`
 
 	Content []string `json:"content,omitempty"`
 
@@ -29,5 +31,5 @@ type Notice struct {
 
 	DateCreated string `json:"dateCreated,omitempty"`
 
-	DateExpired string `json:"dateExpired,omitempty"`
+	DateExpired time.Time `json:"dateExpired,omitempty"`
 }

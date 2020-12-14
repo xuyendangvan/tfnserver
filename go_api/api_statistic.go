@@ -96,14 +96,18 @@ func getDataStatisticStudentFromDB(id string) []byte {
 	)
 	var month int32 = int32(time.Now().Month())
 	var year int = time.Now().Year()
-	data.Quater = (month / 3) + 1
+	if month%3 == 0 {
+		data.Quater = (month / 3)
+	} else {
+		data.Quater = (month / 3) + 1
+	}
 	data.Total = 6 * 4 * 3
 	sid, _ := strconv.Atoi(id)
-	queryAttendance := getQueryValue(data.Quater, year, "attentdance_date")
+	queryAttendance := getQueryValue(data.Quater, year, "attendance_date")
 	queryApplication := getQueryValue(data.Quater, year, "application_date")
-	data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 2 and"+queryAttendance, database, sid)
-	data.Absences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 3 and"+queryAttendance, database, sid)
-	data.UsedMeals = getDataIntQuery("SELECT Count(*) FROM Application a WHERE a.student_id = ? and"+queryApplication, database, sid)
+	data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 2 and "+queryAttendance, database, sid)
+	data.Absences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 3 and "+queryAttendance, database, sid)
+	data.UsedMeals = getDataIntQuery("SELECT Count(*) FROM Application a WHERE a.student_id = ? and "+queryApplication, database, sid)
 	data.Id = 1
 	data.StudentID = int32(sid)
 	data.DateCreated = time.Now().Format("2006-01-02 15:04:05")
@@ -130,7 +134,7 @@ func getQueryValue(quater int32, years int, field string) string {
 	case 3:
 		query = field + " BETWEEN '" + year + "-07-01'AND '" + year + "-09-30'"
 	case 4:
-		query = field + " BETWEEN '" + year + "-010-01'AND '" + year + "-12-31'"
+		query = field + " BETWEEN '" + year + "-10-01'AND '" + year + "-12-31'"
 	default:
 		query = field + " BETWEEN '" + year + "-01-01'AND '" + year + "-03-30'"
 	}
@@ -139,6 +143,7 @@ func getQueryValue(quater int32, years int, field string) string {
 
 func getDataIntQuery(query string, database *sql.DB, sid int) int32 {
 	var result int32
+	fmt.Println(query)
 	rows, err := database.Query(query, sid)
 	if err != nil {
 		fmt.Println(err)

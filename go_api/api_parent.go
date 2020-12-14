@@ -51,7 +51,6 @@ func createRecordParent(parent model.Parent) (err error) {
 	if err != nil {
 		return err
 	}
-	ID := parent.Id
 	UserID := parent.UserID
 	Name := parent.Name
 	Email := parent.Email
@@ -68,11 +67,11 @@ func createRecordParent(parent model.Parent) (err error) {
 	//Phone := students.Phone
 	//StudentStatus := students.StudentStatus
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Parent(id,user_id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Parent(user_id, name, login_name, password, email, tel, address_city,address_district, address_ward,address_street,address,status,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, UserID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(UserID, Name, LoginName, "", Email, Phone, AddressCity, AddressDistrict, "", AddressStreet, Address, Status, DateCreated, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}

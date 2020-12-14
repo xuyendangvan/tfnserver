@@ -54,7 +54,6 @@ func createRecordUser(user model.User) (err error) {
 	if err != nil {
 		return err
 	}
-	ID := user.Id
 	UserName := user.Username
 	Name := user.Name
 	Email := user.Email
@@ -66,11 +65,11 @@ func createRecordUser(user model.User) (err error) {
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO User(id, type, name, login_name, password, email, status, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO User(type, name, login_name, password, email, status, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, Role, Name, UserName, Password, Email, UserStatus, DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(Role, Name, UserName, Password, Email, UserStatus, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}

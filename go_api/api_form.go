@@ -50,7 +50,6 @@ func createRecordForm(form model.Form) (err error) {
 	if err != nil {
 		return err
 	}
-	ID := form.Id
 	Type := form.Type_
 	StudentID := form.StudentID
 	PosterID := form.PosterID
@@ -66,11 +65,11 @@ func createRecordForm(form model.Form) (err error) {
 	//IsCancelMeal := form.IsCancelMeal ???
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
-	insForm, err := db.SQLExec(tx, "INSERT INTO Application(id,repeat_id,student_id,application_date,application_time,type,note,meal_absent,late_meal,picker_name,picker_face_photo,direction,approved,approver, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Application(repeat_id,student_id,application_date,application_time,type,note,meal_absent,late_meal,picker_name,picker_face_photo,direction,approved,approver, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ID, PosterID, StudentID, DateRequest, TimeRequest, Type, Content, CancelMeal, LateMeal, PickerName, PickerPhoto, "direction", "approved", "approver", DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(PosterID, StudentID, DateRequest, TimeRequest, Type, Content, CancelMeal, LateMeal, PickerName, PickerPhoto, "direction", 1, 1, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
