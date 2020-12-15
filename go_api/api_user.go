@@ -246,9 +246,10 @@ func login(username string, password string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		user  model.User
-		users []model.User
-		hash  string
+		user   model.User
+		data   model.LoginResponse
+		result []model.LoginResponse
+		hash   string
 	)
 	rows, err := database.Query("SELECT * FROM User WHERE login_name= ?", username)
 	if err != nil {
@@ -266,10 +267,21 @@ func login(username string, password string) []byte {
 	}
 	for rows.Next() {
 		var date, datecreate time.Time
-		var count int
+		var count, id int32
 		rows.Scan(&user.Id, &user.Role, &user.Name, &user.Username, &user.Password, &user.Email, &user.UserStatus, &datecreate, &date, &count)
 		user.Token = tokenString
-		users = append(users, user)
+		if user.Role == 1 {
+			id = getDataIntQuery("SELECT id FROM Parent WHERE user_id= ?", database, int(user.Id))
+		} else if user.Role == 2 {
+			id = getDataIntQuery("SELECT id FROM Teacher WHERE user_id= ?", database, int(user.Id))
+		} else {
+			id = int32(user.Id)
+		}
+		data.Id = id
+		data.Role = user.Role
+		data.Token = user.Token
+		data.Message = user.Name
+		result = append(result, data)
 		hash = user.Password
 	}
 	defer rows.Close()
@@ -278,10 +290,10 @@ func login(username string, password string) []byte {
 		return nil
 	}
 
-	if users == nil {
+	if result == nil {
 		return nil
 	}
-	jsonResponse, jsonError := json.Marshal(users)
+	jsonResponse, jsonError := json.Marshal(result)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil
