@@ -44,8 +44,7 @@ func getDataStatisticClassFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.AdminStatistic
-		records []model.AdminStatistic
+		data model.AdminStatistic
 	)
 	sid, _ := strconv.Atoi(id)
 	data.TotalStudents = getDataIntQuery("SELECT Count(*) FROM Student s WHERE s.class_id= ?", database, sid)
@@ -59,11 +58,7 @@ func getDataStatisticClassFromDB(id string) []byte {
 	data.Id = 1
 	data.ClassID = int32(sid)
 	data.DateCreated = time.Now().Format("2006-01-02 15:04:05")
-	records = append(records, data)
-	if records == nil {
-		return nil
-	}
-	jsonResponse, jsonError := json.Marshal(records)
+	jsonResponse, jsonError := json.Marshal(data)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil
@@ -76,9 +71,24 @@ func GetStatisticForStudent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "close")
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
-	ID := mux.Vars(r)["id"]
-	log.Printf(ID)
-	jsonResponse := getDataStatisticStudentFromDB(ID)
+	sids, value := r.URL.Query()["sid"]
+
+	if !value || len(sids[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	sid := sids[0]
+
+	qids, value := r.URL.Query()["qid"]
+
+	if !value || len(qids[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	qid := qids[0]
+	jsonResponse := getDataStatisticStudentFromDB(sid, qid)
 	if jsonResponse == nil {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -87,24 +97,19 @@ func GetStatisticForStudent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getDataStatisticStudentFromDB(id string) []byte {
+func getDataStatisticStudentFromDB(id string, qid string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
 		data    model.StudentStatistic
 		records []model.StudentStatistic
 	)
-	var month int32 = int32(time.Now().Month())
 	var year int = time.Now().Year()
-	if month%3 == 0 {
-		data.Quater = (month / 3)
-	} else {
-		data.Quater = (month / 3) + 1
-	}
 	data.Total = 6 * 4 * 3
 	sid, _ := strconv.Atoi(id)
-	queryAttendance := getQueryValue(data.Quater, year, "attendance_date")
-	queryApplication := getQueryValue(data.Quater, year, "application_date")
+	qidValue, _ := strconv.Atoi(qid)
+	queryAttendance := getQueryValue(int32(qidValue), year, "attendance_date")
+	queryApplication := getQueryValue(int32(qidValue), year, "application_date")
 	data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 2 and "+queryAttendance, database, sid)
 	data.Absences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 3 and "+queryAttendance, database, sid)
 	data.UsedMeals = getDataIntQuery("SELECT Count(*) FROM Application a WHERE a.student_id = ? and "+queryApplication, database, sid)

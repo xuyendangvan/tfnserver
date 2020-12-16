@@ -124,8 +124,7 @@ func getDataClassFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Class
-		records []model.Class
+		data model.Class
 	)
 	rows, err := database.Query("SELECT * FROM Class WHERE id= ?", id)
 	if err != nil {
@@ -133,16 +132,12 @@ func getDataClassFromDB(id string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate time.Time
+		var date time.Time
 		var count int
-		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &datecreate, &date, &count)
-		records = append(records, data)
+		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &data.DateCreated, &date, &count)
 	}
 	defer rows.Close()
-	if records == nil {
-		return nil
-	}
-	jsonResponse, jsonError := json.Marshal(records)
+	jsonResponse, jsonError := json.Marshal(data)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil
@@ -197,9 +192,9 @@ func getDataClassFromDBWithIndex(startIndex string, offset string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate time.Time
+		var date time.Time
 		var count int
-		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.YearID, &data.Level, &data.TeacherID, &data.Name, &data.DateCreated, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()

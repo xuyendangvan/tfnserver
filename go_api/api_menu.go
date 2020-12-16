@@ -120,8 +120,7 @@ func getDataMenuFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Menu
-		records []model.Menu
+		data model.Menu
 	)
 	rows, err := database.Query("SELECT * FROM Menu_detail WHERE id= ?", id)
 	if err != nil {
@@ -132,13 +131,9 @@ func getDataMenuFromDB(id string) []byte {
 		var date, datecreate time.Time
 		var count int
 		rows.Scan(&data.Id, &data.Day, &data.Level, &data.AssignedDate, &data.Note, &datecreate, &date, &count)
-		records = append(records, data)
 	}
 	defer rows.Close()
-	if records == nil {
-		return nil
-	}
-	jsonResponse, jsonError := json.Marshal(records)
+	jsonResponse, jsonError := json.Marshal(data)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil

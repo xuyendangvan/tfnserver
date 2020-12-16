@@ -235,8 +235,7 @@ func getDataParentFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Parent
-		records []model.Parent
+		data model.Parent
 	)
 	rows, err := database.Query("SELECT * FROM Parent WHERE id= ?", id)
 	if err != nil {
@@ -248,16 +247,10 @@ func getDataParentFromDB(id string) []byte {
 		var count int
 		var password, addressward string
 		rows.Scan(&data.Id, &data.UserID, &data.Name, &data.LoginName, &password, &data.Email, &data.Phone, &data.AddressCity, &data.AddressDistrict, &addressward, &data.AddressStreet, &data.Address, &data.Status, &datecreate, &date, &count)
-		//user.UpdateDate = h.ConvertDateToString(date, time.RFC3339)
 		data.DateCreated = datecreate.Format(time.RFC3339)
-		//model parent in go different with table parent in database mysql
-		records = append(records, data)
 	}
 	defer rows.Close()
-	if records == nil {
-		return nil
-	}
-	jsonResponse, jsonError := json.Marshal(records)
+	jsonResponse, jsonError := json.Marshal(data)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil
@@ -401,23 +394,12 @@ func updateNotificationStatus(parentID string, notificationID string) (err error
 	sid, err := strconv.Atoi(parentID)
 	nid, err := strconv.Atoi(notificationID)
 	DateUpdate := time.Now()
-	var id int
-	rows, err := database.Query("SELECT id FROM Parent_Notification s WHERE s.parent_id= ? and s.notification_id= ?", sid, nid)
+	insForm, err := db.SQLExec(tx, "INSERT INTO Parent_Notification(parent_id, notification_id, class_id, update_date, update_count) VALUES(?,?,?,?,?)")
 	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	for rows.Next() {
-		rows.Scan(&id)
-	}
-	insForm, err := db.SQLExec(tx, "Update Parent_Notification Set date_update= ?, update_count = update_count + 1 where id= ?")
-	if err != nil {
-		log.Println(err)
 		return err
 	}
-	if _, err := insForm.Exec(DateUpdate, id); err != nil {
+	if _, err := insForm.Exec(sid, nid, nid, DateUpdate, 0); err != nil {
 		tx.Rollback()
-		log.Println(err)
 		return err
 	}
 	tx.Commit()

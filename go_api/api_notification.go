@@ -29,7 +29,7 @@ func CreateNotification(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-	var noti model.Notification
+	var noti model.NotificationData
 	err := decoder.Decode(&noti)
 	log.Println(noti)
 	if err != nil {
@@ -44,7 +44,7 @@ func CreateNotification(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func createRecordNotification(noti model.Notification) (err error) {
+func createRecordNotification(noti model.NotificationData) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -53,6 +53,8 @@ func createRecordNotification(noti model.Notification) (err error) {
 	}
 	Priority := noti.Priority
 	Type := noti.Type_
+	ClassID := noti.ClassID
+	Category := noti.Category
 	Title := noti.Title
 	Content := noti.Content
 	PosterID := noti.PosterID
@@ -61,11 +63,11 @@ func createRecordNotification(noti model.Notification) (err error) {
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Notification(type, priority, title, content, poster_id, seen_count,expired_date, created_date,update_date, update_count) VALUES(?,?,?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Notification(type, priority,class_id,category, title, content, poster_id, seen_count,expired_date, created_date,update_date, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(Type, Priority, Title, Content, PosterID, SeenCount, DateExpired, DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(Type, Priority, ClassID, Category, Title, Content, PosterID, SeenCount, DateExpired, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -124,8 +126,7 @@ func getDataNotificationFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Notification
-		records []model.Notification
+		data model.NotificationData
 	)
 	rows, err := database.Query("SELECT * FROM Notification WHERE id= ?", id)
 	if err != nil {
@@ -135,14 +136,61 @@ func getDataNotificationFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &datecreate, &date, &count)
-		records = append(records, data)
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &datecreate, &date, &count)
 	}
 	defer rows.Close()
-	if records == nil {
+	jsonResponse, jsonError := json.Marshal(data)
+	if jsonError != nil {
+		fmt.Println(jsonError)
 		return nil
 	}
-	jsonResponse, jsonError := json.Marshal(records)
+	return jsonResponse
+}
+
+func GetNotificationStatisticByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getDataNotificationStatisticFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func getDataNotificationStatisticFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.NotificationStatistic
+		parent  model.Parent
+		parents []model.Parent
+	)
+	sid, _ := strconv.Atoi(id)
+	data.NotificationID = int32(sid)
+	data.TotalTarget = getDataIntQuery("SELECT COUNT(*) FROM Parent p , Notification n ,Student s WHERE s.parent_id = p.id and s.class_id = n.class_id and n.notification_id= ?", database, sid)
+	data.TotalSeenCount = getDataIntQuery("SELECT COUNT(*) FROM Parent p inner join Parent_Notification n ON p.id = n.parent_id  WHERE n.notification_id= ?", database, sid)
+	rows, err := database.Query("SELECT * FROM Parent p inner join Parent_Notification n ON p.id = n.parent_id  WHERE n.notification_id= ?", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		var password, addressward string
+		rows.Scan(&parent.Id, &parent.UserID, &parent.Name, &parent.LoginName, &password, &parent.Email, &parent.Phone, &parent.AddressCity, &parent.AddressDistrict, &addressward, &parent.AddressStreet, &parent.Address, &parent.Status, &datecreate, &date, &count)
+		parent.DateCreated = datecreate.Format(time.RFC3339)
+		parents = append(parents, parent)
+	}
+	defer rows.Close()
+	data.UnseenList = parents
+	jsonResponse, jsonError := json.Marshal(data)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil
@@ -158,7 +206,7 @@ func UpdateNotification(w http.ResponseWriter, r *http.Request) {
 	ID := mux.Vars(r)["id"]
 	log.Printf(ID)
 	decoder := json.NewDecoder(r.Body)
-	var t model.Notification
+	var t model.NotificationData
 	err := decoder.Decode(&t)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -174,7 +222,7 @@ func UpdateNotification(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func updateRecordNotification(ID string, noti model.Notification) (err error) {
+func updateRecordNotification(ID string, noti model.NotificationData) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -184,6 +232,8 @@ func updateRecordNotification(ID string, noti model.Notification) (err error) {
 	}
 	sid, err := strconv.Atoi(ID)
 	Priority := noti.Priority
+	ClassID := noti.ClassID
+	Category := noti.Category
 	Type := noti.Type_
 	Title := noti.Title
 	Content := noti.Content
@@ -191,12 +241,12 @@ func updateRecordNotification(ID string, noti model.Notification) (err error) {
 	SeenCount := noti.SeenCount
 	DateExpired := noti.DateExpired
 	updateDate := time.Now()
-	insForm, err := db.SQLExec(tx, "Update Notification Set type = ?,priority= ?,title = ?,content= ?,poster_id = ?,seen_count = ?,expired_date=?,date_update= ?, update_count = update_count + 1 where id= ?")
+	insForm, err := db.SQLExec(tx, "Update Notification Set type = ?,priority= ?,class_id = ?,category = ?,title = ?,content= ?,poster_id = ?,seen_count = ?,expired_date=?,date_update= ?, update_count = update_count + 1 where id= ?")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	if _, err := insForm.Exec(Type, Priority, Title, Content, PosterID, SeenCount, DateExpired, updateDate, sid); err != nil {
+	if _, err := insForm.Exec(Type, Priority, ClassID, Category, Title, Content, PosterID, SeenCount, DateExpired, updateDate, sid); err != nil {
 		tx.Rollback()
 		log.Println(err)
 		return err

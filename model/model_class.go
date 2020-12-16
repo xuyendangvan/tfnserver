@@ -10,8 +10,9 @@
 
 package swagger
 
-type Class struct {
+import "time"
 
+type Class struct {
 	Id int64 `json:"id,omitempty"`
 
 	YearID int32 `json:"yearID,omitempty"`
@@ -22,5 +23,5 @@ type Class struct {
 
 	Name string `json:"name,omitempty"`
 
-	DateCreated string `json:"dateCreated,omitempty"`
+	DateCreated time.Time `json:"dateCreated,omitempty"`
 }

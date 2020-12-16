@@ -186,6 +186,13 @@ var routes = Routes{
 	},
 
 	Route{
+		"GetNotificationStatisticByID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/notification/{id}/statistic",
+		api.GetNotificationStatisticByID,
+	},
+
+	Route{
 		"DeleteNotificationByID",
 		strings.ToUpper("Delete"),
 		"/xuyendangvan/DemoAPI/1.0.0/notification/{id}",
@@ -286,7 +293,7 @@ var routes = Routes{
 	Route{
 		"FindStudentTuitionFeeyByID",
 		strings.ToUpper("Get"),
-		"/xuyendangvan/DemoAPI/1.0.0/students/{id}/tuitionfee",
+		"/xuyendangvan/DemoAPI/1.0.0/students/tuitionfee",
 		api.FindStudentTuitionFeeyByID,
 	},
 

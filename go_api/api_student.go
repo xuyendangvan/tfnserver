@@ -123,8 +123,7 @@ func getDataStudentFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		user    model.Student
-		records []model.Student
+		user model.Student
 	)
 	rows, err := database.Query("SELECT * FROM Student WHERE id= ?", id)
 	if err != nil {
@@ -136,13 +135,9 @@ func getDataStudentFromDB(id string) []byte {
 		var count int
 		var face_photo string
 		rows.Scan(&user.Id, &user.ParentID, &user.ClassID, &user.Name, &user.Birthday, &face_photo, &datecreate, &date, &count)
-		records = append(records, user)
 	}
 	defer rows.Close()
-	if records == nil {
-		return nil
-	}
-	jsonResponse, jsonError := json.Marshal(records)
+	jsonResponse, jsonError := json.Marshal(user)
 	if jsonError != nil {
 		fmt.Println(jsonError)
 		return nil
@@ -362,5 +357,58 @@ func getDataStudentNoticeFromDB(id string) []byte {
 
 func FindStudentTuitionFeeyByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	sids, value := r.URL.Query()["sid"]
+
+	if !value || len(sids[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	sid := sids[0]
+
+	qids, value := r.URL.Query()["qid"]
+
+	if !value || len(qids[0]) < 1 {
+		log.Println("Url Param 'key' is missing")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	qid := qids[0]
+	jsonResponse := getStudentTuitionFeeFromDB(sid, qid)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
+}
+
+func getStudentTuitionFeeFromDB(id string, qid string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data model.TuitionFee
+	)
+	idValue, err := strconv.Atoi(id)
+	sidValue, err := strconv.Atoi(qid)
+	rows, err := database.Query("SELECT * FROM Tution_fee where student_id = ? and quater_id = ?", idValue, sidValue)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		var date time.Time
+		var count int
+		rows.Scan(&data.Id, &data.StudentID, &data.Quater, &data.Tuition, &data.Other, &data.Bus, &data.Food, &data.Refund, &data.Total, &data.Paid, &data.DateCreated, &date, &count)
+	}
+	defer rows.Close()
+	jsonResponse, jsonError := json.Marshal(data)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
