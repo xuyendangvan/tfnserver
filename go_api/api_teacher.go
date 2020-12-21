@@ -417,3 +417,25 @@ func getDataActivityByTeacherFromDB(id string) []byte {
 	}
 	return jsonResponse
 }
+
+func CreateActivity(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var activity []model.Activity
+	err := decoder.Decode(&teacher)
+	log.Println(teacher)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	jsonResponse := getDataActivityByTeacherFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
