@@ -10,7 +10,7 @@ import (
 func DBConn() (db *sql.DB) {
 	dbDriver := "mysql"
 	dbUser := "root"
-	dbPass := "2020NhatTuan"
+	dbPass := ""
 	dbName := "kindergarten"
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(localhost:3306)/"+dbName+"?parseTime=true")
 	if err != nil {

@@ -13,8 +13,8 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "git_source_release/db"
-	model "git_source_release/model"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"log"
 	"net/http"
 	"time"

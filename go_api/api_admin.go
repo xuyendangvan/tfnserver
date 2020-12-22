@@ -12,8 +12,8 @@ package swagger
 
 import (
 	"fmt"
-	db "git_source_release/db"
-	model "git_source_release/model"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"net/http"
 	"time"
 )

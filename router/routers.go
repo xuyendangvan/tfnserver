@@ -15,8 +15,8 @@ import (
 	"net/http"
 	"strings"
 
-	api "git_source_release/go_api"
-	log "git_source_release/log"
+	api "tfnserver/go_api"
+	log "tfnserver/log"
 
 	"github.com/gorilla/mux"
 )

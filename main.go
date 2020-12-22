@@ -21,7 +21,7 @@ import (
 	//
 	//    sw "github.com/myname/myrepo/go"
 	//
-	sw "git_source_release/router"
+	sw "tfnserver/router"
 )
 
 func main() {

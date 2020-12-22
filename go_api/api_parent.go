@@ -13,11 +13,11 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "git_source_release/db"
-	model "git_source_release/model"
 	"log"
 	"net/http"
 	"strconv"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -278,18 +278,17 @@ func getDataNotificationByParentFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Notification
-		records []model.Notification
+		data    model.NotificationData
+		records []model.NotificationData
 	)
-	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 1 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
+	rows, err := database.Query("SELECT id, type, class_id, category, title, content, created_date FROM Notification n WHERE n.type = 1 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate time.Time
-		var count int
-		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &datecreate, &date, &count)
+
+		rows.Scan(&data.Id, &data.Type_, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.DateCreated)
 		records = append(records, data)
 	}
 	defer rows.Close()
