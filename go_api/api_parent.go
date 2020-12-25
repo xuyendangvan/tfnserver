@@ -281,14 +281,15 @@ func getDataNotificationByParentFromDB(id string) []byte {
 		data    model.NotificationData
 		records []model.NotificationData
 	)
-	rows, err := database.Query("SELECT id, type, class_id, category, title, content, created_date FROM Notification n WHERE n.type = 1 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
+	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 1 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	for rows.Next() {
-
-		rows.Scan(&data.Id, &data.Type_, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.DateCreated)
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -326,7 +327,7 @@ func getDataFormByParentFromDB(id string) []byte {
 		data    model.Form
 		records []model.Form
 	)
-	rows, err := database.Query("SELECT a.id,a.repeat_id,a.student_id,a.application_date,a.application_time,a.type,a.note,a.meal_absent1,a.meal_absent2,a.meal_absent3,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
+	rows, err := database.Query("SELECT a.id,a.repeat_id,a.student_id,a.application_date,a.application_time,a.type,a.note,a.meal_absent,a.late_meal,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -334,8 +335,8 @@ func getDataFormByParentFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		var meal_absent1, meal_absent2, meal_absent3, picker_name, picker_face_photo, direction, approved, approver string
-		rows.Scan(&data.Id, &data.PosterID, &data.StudentID, &data.DateRequest, &data.TimeRequest, &data.Type_, &data.Content, &meal_absent1, &meal_absent2, &meal_absent3, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
+		var picker_name, picker_face_photo, direction, approved, approver string
+		rows.Scan(&data.Id, &data.PosterID, &data.StudentID, &data.DateRequest, &data.TimeRequest, &data.Type_, &data.Content, &data.CancelMeal, &data.LateMeal, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()

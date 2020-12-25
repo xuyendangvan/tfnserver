@@ -13,11 +13,11 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "tfnserver/db"
-	model "tfnserver/model"
 	"log"
 	"net/http"
 	"strconv"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -175,8 +175,8 @@ func getDataNotificationByTeacherFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Notification
-		records []model.Notification
+		data    model.NotificationData
+		records []model.NotificationData
 	)
 	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 2 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
 	if err != nil {
@@ -186,7 +186,7 @@ func getDataNotificationByTeacherFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -403,7 +403,7 @@ func getDataActivityByTeacherFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()

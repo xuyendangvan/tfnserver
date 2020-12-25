@@ -13,11 +13,11 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "tfnserver/db"
-	model "tfnserver/model"
 	"log"
 	"net/http"
 	"strconv"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -293,7 +293,7 @@ func getDataStudentActivityFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -337,10 +337,13 @@ func getDataStudentNoticeFromDB(id string) []byte {
 		return nil
 	}
 	for rows.Next() {
+		data.Content = nil
 		var date, datecreate time.Time
 		var severity, title, file1, caption1, file2, caption2, file3, caption3 string
 		var count int
+		var content string
 		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
+		data.Content = append(data.Content, content)
 		records = append(records, data)
 	}
 	defer rows.Close()

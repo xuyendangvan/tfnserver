@@ -13,11 +13,11 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "tfnserver/db"
-	model "tfnserver/model"
 	"log"
 	"net/http"
 	"strconv"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -125,10 +125,13 @@ func getDataNoticeFromDBWithIndex(startIndex string, offset string) []byte {
 		return nil
 	}
 	for rows.Next() {
+		data.Content = nil
 		var date, datecreate time.Time
 		var severity, title, file1, caption1, file2, caption2, file3, caption3 string
 		var count int
-		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
+		var content string
+		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &title, &content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
+		data.Content = append(data.Content, content)
 		records = append(records, data)
 	}
 	defer rows.Close()

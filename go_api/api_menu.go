@@ -13,10 +13,10 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "tfnserver/db"
-	model "tfnserver/model"
 	"log"
 	"net/http"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -28,7 +28,7 @@ func CreateMenu(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-	var menu model.Menu
+	var menu model.MenuDetail
 	err := decoder.Decode(&menu)
 	log.Println(menu)
 	if err != nil {
@@ -43,17 +43,17 @@ func CreateMenu(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func createRecordMenu(menu model.Menu) (err error) {
+func createRecordMenu(menu model.MenuDetail) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
 	if err != nil {
 		return err
 	}
-	Level := menu.Level
-	Day := menu.Day
+	MenuID := menu.MenuID
+	SessionID := menu.SessionID
 	//ClassID := menu.ClassID
-	AssignedDate := menu.AssignedDate
+	FoodName := menu.FoodName
 	Note := menu.Note
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
@@ -61,7 +61,7 @@ func createRecordMenu(menu model.Menu) (err error) {
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(Day, Level, AssignedDate, Note, DateCreate, DateUpdate, 0); err != nil {
+	if _, err := insForm.Exec(MenuID, SessionID, FoodName, Note, DateCreate, DateUpdate, 0); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -120,7 +120,7 @@ func getDataMenuFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data model.Menu
+		data model.MenuDetail
 	)
 	rows, err := database.Query("SELECT * FROM Menu_detail WHERE id= ?", id)
 	if err != nil {
@@ -130,7 +130,7 @@ func getDataMenuFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.Day, &data.Level, &data.AssignedDate, &data.Note, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.MenuID, &data.SessionID, &data.FoodName, &data.Note, &datecreate, &date, &count)
 	}
 	defer rows.Close()
 	jsonResponse, jsonError := json.Marshal(data)

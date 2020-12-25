@@ -13,11 +13,11 @@ package swagger
 import (
 	"encoding/json"
 	"fmt"
-	db "tfnserver/db"
-	model "tfnserver/model"
 	"log"
 	"net/http"
 	"strconv"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
