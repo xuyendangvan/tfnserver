@@ -30,10 +30,7 @@ func main() {
 
 	router := sw.NewRouter()
 
-	port, err := os.Getenv("PORT")
-	if err != nil {
-		port = "3000"
-	}
+	port := os.Getenv("PORT")
 
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
