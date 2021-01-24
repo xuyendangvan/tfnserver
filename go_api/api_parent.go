@@ -287,9 +287,11 @@ func getDataNotificationByParentFromDB(id string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate time.Time
+		var date, dateCreated time.Time
 		var count int
-		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &dateCreated, &date, &count)
+
+		data.DateCreated = dateCreated.Format("02/01/2006")
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -327,7 +329,7 @@ func getDataFormByParentFromDB(id string) []byte {
 		data    model.Form
 		records []model.Form
 	)
-	rows, err := database.Query("SELECT a.id,a.repeat_id,a.student_id,a.application_date,a.application_time,a.type,a.note,a.meal_absent,a.late_meal,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
+	rows, err := database.Query("SELECT a.id,a.type,a.student_id,a.application_date,a.note,a.meal_absent,a.late_meal,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -336,7 +338,7 @@ func getDataFormByParentFromDB(id string) []byte {
 		var date, datecreate time.Time
 		var count int
 		var picker_name, picker_face_photo, direction, approved, approver string
-		rows.Scan(&data.Id, &data.PosterID, &data.StudentID, &data.DateRequest, &data.TimeRequest, &data.Type_, &data.Content, &data.CancelMeal, &data.LateMeal, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Type_, &data.StudentID, &date, &data.Content, &data.CancelMeal, &data.LateMeal, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -399,6 +401,60 @@ func updateNotificationStatus(parentID string, notificationID string) (err error
 		return err
 	}
 	if _, err := insForm.Exec(sid, nid, nid, DateUpdate, 0); err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+// Store the device token and the user ID to send the push notification
+func AddDeviceToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var deviceToken model.DeviceToken
+	err := decoder.Decode(&deviceToken)
+	log.Println(deviceToken)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	e := createDeviceToken(deviceToken)
+	if e != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// Adding to the db
+func createDeviceToken(deviceToken model.DeviceToken) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+	ID := deviceToken.Id
+	Type := deviceToken.Type
+	Token := deviceToken.DeviceToken
+	time := time.Now()
+	query := ""
+	if Type == 1 {
+		query = "INSERT INTO Device_token(parent_id, token, updated_date, updated_count) VALUES(?,?,?,?)"
+	} else {
+		query = "INSERT INTO Device_token(teacher_id, token, updated_date, updated_count) VALUES(?,?,?,?)"
+	}
+
+	insForm, err := db.SQLExec(tx, query)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if _, err := insForm.Exec(ID, Token, time, 0); err != nil {
 		tx.Rollback()
 		return err
 	}

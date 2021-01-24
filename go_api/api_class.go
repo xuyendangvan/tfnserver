@@ -234,19 +234,60 @@ func getDataStudentByClassFromDB(id string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
-		data    model.Student
-		records []model.Student
+		data    model.StudentStatus
+		records []model.StudentStatus
+		//temp1   int
 	)
-	rows, err := database.Query("SELECT s.id,s.parent_id,s.class_id,s.name,s.birthday,s.face_photo,s.date_create,s.date_update,s.update_count,a.type FROM Student s inner join Application a ON s.id = a.student_id WHERE s.class_id= ?", id)
+	rows, err := database.Query("SELECT id, name FROM Student WHERE class_id= ?", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate time.Time
-		var count int
-		var face_photo string
-		rows.Scan(&data.Id, &data.ParentID, &data.ClassID, &data.Name, &data.Birthday, &face_photo, &datecreate, &date, &count, &data.StudentStatus)
+		// Get student name and ID
+		rows.Scan(&data.StudentID, &data.StudentName)
+
+		data.SchoolArrival = 0
+		data.AbsenceRequested = 0
+		data.MealCancel = 0
+		data.LatePickup = 0
+
+		// Get the notice
+		nRows, err := database.Query("SELECT content FROM notice n WHERE student_id= ? AND n.type = 1 AND date_occur <= CURDATE() AND date_expire >= CURDATE()", data.StudentID)
+		for nRows.Next() {
+			nRows.Scan(&data.ParentNotice)
+		}
+
+		// Get the status
+		statusRows, err := database.Query("SELECT status FROM student_status WHERE student_id= ?", data.StudentID)
+		for statusRows.Next() {
+			statusRows.Scan(&data.SchoolArrival)
+		}
+
+		date := time.Now().Format("2006-01-02")
+
+		// Get the status
+		sRows, err := database.Query("SELECT type FROM application WHERE student_id= ? AND application_date = ?", data.StudentID, date)
+		for sRows.Next() {
+			var temp int
+			log.Println(sRows)
+			sRows.Scan(&temp)
+			log.Println("temp value", temp)
+			if temp == 1 {
+				data.AbsenceRequested = 1
+			} else if temp == 2 {
+				data.LatePickup = 1
+			} else {
+				data.MealCancel = 1
+			}
+		}
+
+		if err != nil {
+			return nil
+		}
+		defer statusRows.Close()
+		defer nRows.Close()
+		defer sRows.Close()
 		records = append(records, data)
 	}
 	defer rows.Close()

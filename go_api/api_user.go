@@ -295,8 +295,50 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Connection", "close")
 	r.Header.Set("Connection", "close")
+
 	defer r.Body.Close()
+
+	ids, _ := r.URL.Query()["id"]
+
+	ID := ids[0]
+
+	types, _ := r.URL.Query()["type"]
+	Type := types[0]
+
+	log.Printf(ID)
+	e := logUserOut(ID, Type)
+	if e != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+}
+
+// ID is parent/teacherID, Type is the type of user
+func logUserOut(ID string, Type string) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+
+	temp, _ := strconv.Atoi(Type)
+	query := ""
+
+	if temp == 1 {
+		query = "DELETE FROM Device_token WHERE parent_id= ?"
+	} else {
+		query = "DELETE FROM Device_token WHERE teacher_id= ?"
+	}
+
+	insForm, err := database.Prepare(query)
+	if _, err := insForm.Exec(ID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {

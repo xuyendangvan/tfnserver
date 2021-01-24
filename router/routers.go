@@ -144,10 +144,10 @@ var routes = Routes{
 	},
 
 	Route{
-		"GetMenuDetailByDay",
+		"GetMenuDetailForWeek",
 		strings.ToUpper("Get"),
-		"/xuyendangvan/DemoAPI/1.0.0/menu/{id}/detail",
-		api.GetMenuDetailByDay,
+		"/xuyendangvan/DemoAPI/1.0.0/menu/detail",
+		api.GetMenuDetailForWeek,
 	},
 
 	Route{
@@ -211,6 +211,13 @@ var routes = Routes{
 		strings.ToUpper("Put"),
 		"/xuyendangvan/DemoAPI/1.0.0/notification",
 		api.UpdateNotification,
+	},
+
+	Route{
+		"AddDeviceToken",
+		strings.ToUpper("Post"),
+		"/xuyendangvan/DemoAPI/1.0.0/device/subcribe",
+		api.AddDeviceToken,
 	},
 
 	Route{
@@ -326,6 +333,13 @@ var routes = Routes{
 	},
 
 	Route{
+		"UpdateStudentStatus",
+		strings.ToUpper("Put"),
+		"/xuyendangvan/DemoAPI/1.0.0/student/status",
+		api.UpdateStudentStatus,
+	},
+
+	Route{
 		"AddTeacher",
 		strings.ToUpper("Post"),
 		"/xuyendangvan/DemoAPI/1.0.0/teachers",
@@ -380,7 +394,12 @@ var routes = Routes{
 		"/xuyendangvan/DemoAPI/1.0.0/teachers/{id}",
 		api.UpdateTeacher,
 	},
-
+	Route{
+		"AddActivity",
+		strings.ToUpper("Post"),
+		"/xuyendangvan/DemoAPI/1.0.0/teachers/activity",
+		api.AddActivity,
+	},
 	Route{
 		"CreateUser",
 		strings.ToUpper("Post"),
@@ -461,7 +480,7 @@ var routes = Routes{
 	Route{
 		"GetStatisticForStudent",
 		strings.ToUpper("Get"),
-		"/xuyendangvan/DemoAPI/1.0.0/statistic/students/{id}",
+		"/xuyendangvan/DemoAPI/1.0.0/statistic/students",
 		api.GetStatisticForStudent,
 	},
 }

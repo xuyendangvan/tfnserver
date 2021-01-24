@@ -19,6 +19,8 @@ type Notice struct {
 
 	DateOccur time.Time `json:"dateOccur,omitempty"`
 
+	Title string `json:"title,omitempty"`
+
 	Content []string `json:"content,omitempty"`
 
 	ConfirmMessage string `json:"confirmMessage,omitempty"`
@@ -28,6 +30,8 @@ type Notice struct {
 	ParentID int32 `json:"parentID,omitempty"`
 
 	TeacherID int32 `json:"teacherID,omitempty"`
+
+	ClassID int32 `json:"classID,omitempty"`
 
 	DateCreated string `json:"dateCreated,omitempty"`
 

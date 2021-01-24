@@ -184,9 +184,11 @@ func getDataNotificationByTeacherFromDB(id string) []byte {
 		return nil
 	}
 	for rows.Next() {
-		var date, datecreate time.Time
+		var date, dateCreated time.Time
 		var count int
-		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Type_, &data.Priority, &data.ClassID, &data.Category, &data.Title, &data.Content, &data.PosterID, &data.SeenCount, &data.DateExpired, &dateCreated, &date, &count)
+		data.DateCreated = dateCreated.Format("02/01/2006")
+
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -416,4 +418,57 @@ func getDataActivityByTeacherFromDB(id string) []byte {
 		return nil
 	}
 	return jsonResponse
+}
+
+func AddActivity(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var activities []model.Activity
+	err := decoder.Decode(&activities)
+	log.Println(activities)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	e := createRecordActivity(activities)
+	if e != nil {
+		log.Println(e)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func createRecordActivity(list []model.Activity) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		return err
+	}
+	for _, item := range list {
+		//ID := item.Id
+		//Type := item.Type_
+		ClassID := item.ClassID
+		TeacherID := item.TeacherID
+		Title := item.Title
+		Content := item.Content
+		Photo := ""
+		DateCreated := time.Now()
+		//DateUpdate := time.Now()
+
+		insForm, err := db.SQLExec(tx, "INSERT INTO activity(class_id, date_occur, date_expire, poster_id, title, content, photo1, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?)")
+		if err != nil {
+			return err
+		}
+		if _, err := insForm.Exec(ClassID, DateCreated, DateCreated.AddDate(0, 0, 5), TeacherID, Title, Content, Photo, DateCreated, DateCreated, 0); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	tx.Commit()
+	return nil
 }

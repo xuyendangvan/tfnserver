@@ -11,10 +11,11 @@
 package swagger
 
 type Activity struct {
-
 	Id int64 `json:"id,omitempty"`
 
 	ClassID int32 `json:"classID,omitempty"`
+
+	Type_ int32 `json:"type,omitempty"`
 
 	DateOccur string `json:"dateOccur,omitempty"`
 

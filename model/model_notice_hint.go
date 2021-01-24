@@ -10,20 +10,11 @@
 
 package swagger
 
-import "time"
+type NoticeHint struct {
 
-type MenuDetail struct {
 	Id int32 `json:"id,omitempty"`
 
-	MenuID int32 `json:"menuID,omitempty"`
+	Category int32 `json:"category,omitempty"`
 
-	SessionID int32 `json:"sessionID,omitempty"`
-
-	FoodName string `json:"foodName,omitempty"`
-
-	Note string `json:"note,omitempty"`
-
-	CanteenID int32 `json:"canteenID,omitempty"`
-
-	DateCreated time.Time `json:"dateCreated,omitempty"`
+	Hint string `json:"hint,omitempty"`
 }

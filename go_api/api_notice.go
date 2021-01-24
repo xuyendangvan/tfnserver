@@ -29,7 +29,7 @@ func AddNotice(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-	var notice []model.Notice
+	var notice model.Notice
 	err := decoder.Decode(&notice)
 	log.Println(notice)
 	if err != nil {
@@ -38,42 +38,47 @@ func AddNotice(w http.ResponseWriter, r *http.Request) {
 	}
 	e := createRecordNotice(notice)
 	if e != nil {
+		log.Println(e)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func createRecordNotice(listNotice []model.Notice) (err error) {
+func createRecordNotice(notice model.Notice) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
 	if err != nil {
 		return err
 	}
-	for _, notice := range listNotice {
-		Type := notice.Type_
-		DateOccur := notice.DateOccur
-		Content := notice.Content
-		ConfirmMessage := notice.ConfirmMessage
-		StudentID := notice.StudentID
-		ParentID := notice.ParentID
-		TeacherID := notice.TeacherID
-		DateExpired := notice.DateExpired
-		DateCreate := time.Now()
-		DateUpdate := time.Now()
-		for _, contentValue := range Content {
-			insForm, err := db.SQLExec(tx, "INSERT INTO Notice(severity,type,class_id,parent_id,date_occur,date_expire,poster_id,title,content,confirm_message,file1,caption1,file2,caption2,file3,caption3,date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-			if err != nil {
-				return err
-			}
-			if _, err := insForm.Exec(1, Type, StudentID, ParentID, DateOccur, DateExpired, TeacherID, "title", contentValue, ConfirmMessage, "file1", "caption1", "file2", "caption2", "file3", "caption3", DateCreate, DateUpdate, 0); err != nil {
-				tx.Rollback()
-				log.Println(err.Error())
-				return err
-			}
+
+	// check data
+	Type := notice.Type_
+	id := int32(0)
+	query := ""
+
+	if Type == 1 {
+		query = "INSERT INTO Notice(severity,type,class_id,student_id,parent_id,date_occur,date_expire,title,content,date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+		id = notice.ParentID
+	} else {
+		query = "INSERT INTO Notice(severity,type,class_id,student_id,teacher_id,date_occur,date_expire,title,content, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+		id = notice.TeacherID
+	}
+	for _, contentValue := range notice.Content {
+
+		insForm, err := db.SQLExec(tx, query)
+		if err != nil {
+			return err
+		}
+		_, er := insForm.Exec(1, Type, notice.ClassID, notice.StudentID, id, time.Now(), time.Now(), "title", contentValue, time.Now(), time.Now(), 0)
+		if er != nil {
+			tx.Rollback()
+			log.Println(er.Error())
+			return er
 		}
 	}
+
 	tx.Commit()
 	return nil
 }

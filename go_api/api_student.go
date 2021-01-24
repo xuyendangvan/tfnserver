@@ -11,12 +11,14 @@
 package swagger
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	db "tfnserver/db"
+	messaging "tfnserver/firebase_messaging"
 	model "tfnserver/model"
 	"time"
 
@@ -29,15 +31,17 @@ func AddStudent(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
-	var students model.Student
-	err := decoder.Decode(&students)
-	log.Println(students)
+	var student model.Student
+	err := decoder.Decode(&student)
+	log.Println(student)
 	if err != nil {
+		log.Println("sss", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	e := createRecordStudents(students)
+	e := createRecordStudents(student)
 	if e != nil {
+		log.Println(e)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -54,20 +58,37 @@ func createRecordStudents(students model.Student) (err error) {
 	ClassID := students.ClassID
 	ParentID := students.ParentID
 	Name := students.Name
-	Birthday := students.Birthday
+	//Birthday := students.Birthday ? time.Now()
 	DateCreate := time.Now()
 	DateUpdate := time.Now()
-	//Phone := students.Phone
-	//StudentStatus := students.StudentStatus
 
-	insForm, err := db.SQLExec(tx, "INSERT INTO Student(parent_id, class_id, name, birthday, face_photo, date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?,?)")
+	insForm, err := db.SQLExec(tx, "INSERT INTO Student(parent_id, class_id, name, face_photo, date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	if _, err := insForm.Exec(ParentID, ClassID, Name, Birthday, "", DateCreate, DateUpdate, 0); err != nil {
+	id, err := insForm.Exec(ParentID, ClassID, Name, "", DateCreate, DateUpdate, 0)
+	if err != nil {
+		log.Println(err)
 		tx.Rollback()
 		return err
 	}
+
+	// get last inserted id
+	lid, err := id.LastInsertId()
+
+	// insert student status
+	insForm, err = db.SQLExec(tx, "INSERT INTO Student_status(student_id, status) VALUES(?,?)")
+	if err != nil {
+		return err
+	}
+	_, err = insForm.Exec(lid, 2)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return err
+	}
+
+	log.Println("id student status is", id)
 	tx.Commit()
 	return nil
 }
@@ -262,6 +283,79 @@ func updateRecordStudent(ID string, t model.Student) (err error) {
 	return nil
 }
 
+// UpdateStudentStatus : update when teacher do a roll call
+func UpdateStudentStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+
+	// get params
+	ids, _ := r.URL.Query()["id"]
+
+	ID := ids[0]
+
+	status, _ := r.URL.Query()["status"]
+	Status := status[0]
+
+	log.Println(ID)
+	e := updateRecordStudentStatus(ID, Status)
+	if e != nil {
+		log.Printf(e.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func updateRecordStudentStatus(id string, status string) (err error) {
+	database := db.DBConn()
+	defer database.Close()
+	tx, err := db.SQLBegin(database)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	sid, _ := strconv.Atoi(id)
+
+	insForm, err := db.SQLExec(tx, "Update Student_status Set status = ? where student_id = ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if _, err := insForm.Exec(status, sid); err != nil {
+		tx.Rollback()
+		log.Println(err)
+		return err
+	}
+	tx.Commit()
+
+	// init the fcm app
+	app := messaging.InitializeAppWithServiceAccount()
+	ctxBG := context.Background()
+	client, _ := app.Messaging(ctxBG)
+
+	// select the token for parent device
+	rows, err := database.Query("SELECT d.token FROM device_token d inner join student s on s.id = ? and d.parent_id = s.parent_id;", sid)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	var (
+		token  string
+		tokens []string
+	)
+	for rows.Next() {
+		rows.Scan(&token)
+		tokens = append(tokens, token)
+	}
+	defer rows.Close()
+	log.Println(ctxBG, client, tokens)
+	messaging.SendMulti(ctxBG, client, tokens)
+	return nil
+}
+
 func FindStudentActivityByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Connection", "close")
@@ -285,7 +379,7 @@ func getDataStudentActivityFromDB(id string) []byte {
 		data    model.Activity
 		records []model.Activity
 	)
-	rows, err := database.Query("SELECT a.id,a.class_id,a.date_occur,a.date_expire,a.poster_id,a.title,a.content,a.photo1,a.caption1,a.photo2,a.caption2,a.photo3,a.caption3,a.photo4,a.caption4,a.photo5,a.caption5,a.date_create,a.date_update,a.update_count FROM Activity a inner join Student s ON a.class_id = s.class_id WHERE s.id= ?", id)
+	rows, err := database.Query("SELECT a.id,a.type,a.date_occur,a.date_expire,a.poster_id,a.title,a.content,a.photo1,a.caption1,a.photo2,a.caption2,a.photo3,a.caption3,a.photo4,a.caption4,a.photo5,a.caption5,a.date_create,a.date_update,a.update_count FROM Activity a where a.type = 2 or a.class_id = (select class_id from Student s where s.id = ?)", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -293,7 +387,7 @@ func getDataStudentActivityFromDB(id string) []byte {
 	for rows.Next() {
 		var date, datecreate time.Time
 		var count int
-		rows.Scan(&data.Id, &data.ClassID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Type_, &data.DateOccur, &data.DateExpired, &data.TeacherID, &data.Title, &data.Content, &data.Photo1, &data.Caption1, &data.Photo2, &data.Caption2, &data.Photo3, &data.Caption3, &data.Photo4, &data.Caption4, &data.Photo5, &data.Caption5, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -331,7 +425,7 @@ func getDataStudentNoticeFromDB(id string) []byte {
 		data    model.Notice
 		records []model.Notice
 	)
-	rows, err := database.Query("SELECT n.id,n.severity,n.type,n.class_id,n.parent_id,n.date_occur,n.date_expire,n.poster_id,n.title,n.content,n.confirm_message,n.file1,n.caption1,n.file2,n.caption2,n.file3,n.caption3,n.date_create,n.date_update,n.update_count FROM Notice n inner join Student s ON n.class_id = s.class_id and n.parent_id = s.parent_id WHERE s.id= ?", id)
+	rows, err := database.Query("SELECT n.id,n.severity,n.type,n.class_id,n.parent_id,n.date_occur,n.date_expire,n.teacher_id,n.title,n.content,n.confirm_message,n.date_create,n.date_update,n.update_count FROM Notice n where n.student_id = ? or (n.student_id = 1000 AND n.class_id = (select s.class_id from student s where s.id = ?))", id, id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -339,10 +433,13 @@ func getDataStudentNoticeFromDB(id string) []byte {
 	for rows.Next() {
 		data.Content = nil
 		var date, datecreate time.Time
-		var severity, title, file1, caption1, file2, caption2, file3, caption3 string
+		var severity string
 		var count int
 		var content string
-		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &title, &data.Content, &data.ConfirmMessage, &file1, &caption1, &file2, &caption2, &file3, &caption3, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &severity, &data.Type_, &data.StudentID, &data.ParentID, &data.DateOccur, &data.DateExpired, &data.TeacherID, &data.Title, &content, &data.ConfirmMessage, &datecreate, &date, &count)
+
+		fmt.Println(content)
+
 		data.Content = append(data.Content, content)
 		records = append(records, data)
 	}

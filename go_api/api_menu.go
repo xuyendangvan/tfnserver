@@ -146,7 +146,34 @@ func GetMenuByDay(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func GetMenuDetailByDay(w http.ResponseWriter, r *http.Request) {
+func GetMenuDetailForWeek(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data model.MenuDetail
+		list []model.MenuDetail
+	)
+	rows, err := database.Query("SELECT * FROM Menu_detail")
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+	}
+	for rows.Next() {
+		var date, datecreate time.Time
+		var count int
+		rows.Scan(&data.Id, &data.MenuID, &data.SessionID, &data.FoodName, &data.Note, &datecreate, &date, &count)
+		list = append(list, data)
+	}
+	defer rows.Close()
+	jsonResponse, jsonError := json.Marshal(list)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		w.WriteHeader(http.StatusNotFound)
+	}
+	w.Write(jsonResponse)
 	w.WriteHeader(http.StatusOK)
 }
