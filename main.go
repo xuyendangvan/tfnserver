@@ -13,6 +13,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	// WARNING!
 	// Change this to a fully-qualified import path
@@ -29,5 +30,10 @@ func main() {
 
 	router := sw.NewRouter()
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	port, err := os.Getenv("PORT")
+	if err != nil {
+		port = "3000"
+	}
+
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
