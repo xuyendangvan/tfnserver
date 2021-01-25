@@ -10,11 +10,18 @@
 
 package swagger
 
-import "time"
+import (
+	"encoding/json"
+	"strings"
+	"time"
+)
+
+type CustomTime time.Time
 
 type Form struct {
 	Id int64 `json:"id,omitempty"`
 
+	Repeated int32 `json:"repeat,omitempty"`
 	// type: 1- nghi hoc, 2- don tre, 3- huy bua
 	Type_ int32 `json:"type,omitempty"`
 
@@ -35,9 +42,11 @@ type Form struct {
 
 	Content string `json:"content,omitempty"`
 
-	DateRequest time.Time `json:"dateRequest,omitempty"`
+	DateRequestFrom string `json:"dateRequestFrom,omitempty"`
 
-	TimeRequest time.Time `json:"timeRequest,omitempty"`
+	DateRequestTo string `json:"dateRequestTo,omitempty"`
+
+	TimeRequest string `json:"timeRequest,omitempty"`
 
 	// Meal: 1- sang, 2- chieu, 3-xe, 4-ca ngay
 	CancelMeal int32 `json:"cancelMeal,omitempty"`
@@ -47,4 +56,25 @@ type Form struct {
 	LateMeal bool `json:"lateMeal,omitempty"`
 
 	DateCreated string `json:"dateCreated,omitempty"`
+}
+
+// Implement Marshaler and Unmarshaler interface
+func (j *CustomTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return err
+	}
+	*j = CustomTime(t)
+	return nil
+}
+
+func (j CustomTime) MarshalJSON() ([]byte, error) {
+	return json.Marshal(j)
+}
+
+// Maybe a Format function for printing your date
+func (j CustomTime) Format(s string) string {
+	t := time.Time(j)
+	return t.Format(s)
 }

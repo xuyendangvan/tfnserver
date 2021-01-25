@@ -251,9 +251,9 @@ func getDataStudentByClassFromDB(id string) []byte {
 		data.AbsenceRequested = 0
 		data.MealCancel = 0
 		data.LatePickup = 0
-
+		data.ParentNotice = ""
 		// Get the notice
-		nRows, err := database.Query("SELECT content FROM notice n WHERE student_id= ? AND n.type = 1 AND date_occur <= CURDATE() AND date_expire >= CURDATE()", data.StudentID)
+		nRows, err := database.Query("SELECT content FROM notice n WHERE student_id= ? AND n.type = 1 AND date(date_occur) = CURDATE();", data.StudentID)
 		for nRows.Next() {
 			nRows.Scan(&data.ParentNotice)
 		}
@@ -267,11 +267,15 @@ func getDataStudentByClassFromDB(id string) []byte {
 		date := time.Now().Format("2006-01-02")
 
 		// Get the status
-		sRows, err := database.Query("SELECT type FROM application WHERE student_id= ? AND application_date = ?", data.StudentID, date)
+		sRows, err := database.Query("SELECT type FROM application WHERE student_id= ? AND application_from_date = ?", data.StudentID, date)
+		if err != nil {
+			print(err)
+			return nil
+		}
 		for sRows.Next() {
 			var temp int
-			log.Println(sRows)
-			sRows.Scan(&temp)
+			//log.Println(sRows)
+			//sRows.Scan(&temp)
 			log.Println("temp value", temp)
 			if temp == 1 {
 				data.AbsenceRequested = 1
@@ -282,9 +286,6 @@ func getDataStudentByClassFromDB(id string) []byte {
 			}
 		}
 
-		if err != nil {
-			return nil
-		}
 		defer statusRows.Close()
 		defer nRows.Close()
 		defer sRows.Close()

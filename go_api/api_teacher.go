@@ -451,7 +451,7 @@ func createRecordActivity(list []model.Activity) (err error) {
 	}
 	for _, item := range list {
 		//ID := item.Id
-		//Type := item.Type_
+		Type := item.Type_
 		ClassID := item.ClassID
 		TeacherID := item.TeacherID
 		Title := item.Title
@@ -460,11 +460,11 @@ func createRecordActivity(list []model.Activity) (err error) {
 		DateCreated := time.Now()
 		//DateUpdate := time.Now()
 
-		insForm, err := db.SQLExec(tx, "INSERT INTO activity(class_id, date_occur, date_expire, poster_id, title, content, photo1, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?)")
+		insForm, err := db.SQLExec(tx, "INSERT INTO activity(type, class_id, date_occur, date_expire, poster_id, title, content, photo1, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
 		if err != nil {
 			return err
 		}
-		if _, err := insForm.Exec(ClassID, DateCreated, DateCreated.AddDate(0, 0, 5), TeacherID, Title, Content, Photo, DateCreated, DateCreated, 0); err != nil {
+		if _, err := insForm.Exec(Type, ClassID, DateCreated, DateCreated.AddDate(0, 0, 5), TeacherID, Title, Content, Photo, DateCreated, DateCreated, 0); err != nil {
 			tx.Rollback()
 			return err
 		}

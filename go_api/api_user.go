@@ -299,7 +299,6 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	ids, _ := r.URL.Query()["id"]
-
 	ID := ids[0]
 
 	types, _ := r.URL.Query()["type"]

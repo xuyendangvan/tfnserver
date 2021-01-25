@@ -9,9 +9,12 @@ import (
 
 func DBConn() (db *sql.DB) {
 	dbDriver := "mysql"
-	dbUser := "bb7c29181d86c7"
-	dbPass := "9b013a28"
-	dbName := "heroku_7649b2b166d0075"
+	dbUser := "b50cea24f1d5d7"
+	dbPass := "b1bdfc6b"
+	dbName := "heroku_a29f42ff2497d2c"
+	// dbUser := "root"
+	// dbPass := ""
+	// dbName := "kindergarten"
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(us-cdbr-east-03.cleardb.com)/"+dbName+"?parseTime=true")
 	if err != nil {
 		panic(err.Error())

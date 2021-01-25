@@ -138,7 +138,7 @@ func sendAll(ctx context.Context, client *messaging.Client) {
 	// [END send_all]
 }
 
-func SendMulti(ctx context.Context, client *messaging.Client, tokens []string) {
+func SendMulti(ctx context.Context, client *messaging.Client, tokens []string, title string) {
 	// [START send_multicast]
 	// Create a list containing up to 100 registration tokens.
 	// This registration tokens come from the client FCM SDKs.
@@ -149,12 +149,12 @@ func SendMulti(ctx context.Context, client *messaging.Client, tokens []string) {
 	// }
 	message := &messaging.MulticastMessage{
 		Notification: &messaging.Notification{
-			Title: "Học sinh Đặng Nhật Minh đã tới trường",
+			Title: title,
 			Body:  "cảm ơn",
 		},
 		Data: map[string]string{
 			"score": "850",
-			"time":  "2:45",
+			"time":  time.Now().Format("2006-01-02"),
 		},
 		Tokens: tokens,
 	}

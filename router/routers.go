@@ -235,6 +235,13 @@ var routes = Routes{
 	},
 
 	Route{
+		"FindStudentStatusByParentID",
+		strings.ToUpper("Get"),
+		"/xuyendangvan/DemoAPI/1.0.0/parents/{id}/studentstatus",
+		api.FindStudentStatusByParentID,
+	},
+
+	Route{
 		"GetParentNotification",
 		strings.ToUpper("Get"),
 		"/xuyendangvan/DemoAPI/1.0.0/parent/{id}/notifications",

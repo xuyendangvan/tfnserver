@@ -12,11 +12,11 @@ package swagger
 
 import (
 	"encoding/json"
-	db "tfnserver/db"
-	model "tfnserver/model"
 	"log"
 	"net/http"
 	"strconv"
+	db "tfnserver/db"
+	model "tfnserver/model"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -32,6 +32,7 @@ func CreateForm(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&form)
 	log.Println(form)
 	if err != nil {
+		log.Println("decode err", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
@@ -51,28 +52,53 @@ func createRecordForm(form model.Form) (err error) {
 		return err
 	}
 	Type := form.Type_
-	StudentID := form.StudentID
-	PosterID := form.PosterID
-	//ClassTime := form.ClassTime ???
-	//Title := form.Title ???
-	Content := form.Content
-	DateRequest := form.DateRequest
-	TimeRequest := form.TimeRequest
-	CancelMeal := form.CancelMeal
-	LateMeal := form.LateMeal
-	PickerName := form.PickerName
-	PickerPhoto := form.PickerPhoto
-	//IsCancelMeal := form.IsCancelMeal ???
-	DateCreate := time.Now()
-	DateUpdate := time.Now()
-	insForm, err := db.SQLExec(tx, "INSERT INTO Application(repeat_id,student_id,application_date,application_time,type,note,meal_absent,late_meal,picker_name,picker_face_photo,direction,approved,approver, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-	if err != nil {
-		return err
+	timeNow := time.Now()
+	query := ""
+
+	switch Type {
+	// Absence form
+	case 1:
+		query = "INSERT INTO Application(repeat_id,poster_id,student_id,application_from_date, application_to_date,class_time, type,note, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+		insForm, err := db.SQLExec(tx, query)
+		if err != nil {
+			log.Println("insert err", err)
+			return err
+		}
+		if _, err := insForm.Exec(form.Repeated, form.PosterID, form.StudentID, form.DateRequestFrom, form.DateRequestTo, form.ClassTime, Type, form.Content, timeNow, timeNow, 0); err != nil {
+			tx.Rollback()
+			log.Println("exc err", err)
+			return err
+		}
+		break
+	// Late pickup form
+	case 2:
+		query = "INSERT INTO Application(repeat_id,poster_id,student_id,application_from_date, application_to_date,application_time,class_time,type,note,late_meal,picker_name,picker_face_photo,picker_phone, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		insForm, err := db.SQLExec(tx, query)
+		if err != nil {
+			log.Println("insert err", err)
+			return err
+		}
+		if _, err := insForm.Exec(form.Repeated, form.PosterID, form.StudentID, form.DateRequestFrom, form.DateRequestTo, Type, form.Content, form.LateMeal, form.PickerName, form.PickerPhoto, form.PickerPhone, timeNow, timeNow, 0); err != nil {
+			tx.Rollback()
+			log.Println("exc err", err)
+			return err
+		}
+		break
+	case 3:
+		query = "INSERT INTO Application(repeat_id,poster_id,student_id,application_from_date, application_to_date,type,note,meal_absent,date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+		insForm, err := db.SQLExec(tx, query)
+		if err != nil {
+			log.Println("insert err", err)
+			return err
+		}
+		if _, err := insForm.Exec(form.Repeated, form.PosterID, form.StudentID, form.DateRequestFrom, form.DateRequestTo, Type, form.Content, form.CancelMeal, timeNow, timeNow, 0); err != nil {
+			tx.Rollback()
+			log.Println("exc err", err)
+			return err
+		}
+		break
 	}
-	if _, err := insForm.Exec(PosterID, StudentID, DateRequest, TimeRequest, Type, Content, CancelMeal, LateMeal, PickerName, PickerPhoto, "direction", 1, 1, DateCreate, DateUpdate, 0); err != nil {
-		tx.Rollback()
-		return err
-	}
+
 	tx.Commit()
 	return nil
 }
@@ -116,7 +142,7 @@ func updateRecordForm(ID string, t model.Form) (err error) {
 	//ClassTime := t.ClassTime ???
 	//Title := t.Title ???
 	Content := t.Content
-	DateRequest := t.DateRequest
+	DateRequest := t.DateRequestFrom
 	TimeRequest := t.TimeRequest
 	CancelMeal := t.CancelMeal
 	LateMeal := t.LateMeal
@@ -124,7 +150,7 @@ func updateRecordForm(ID string, t model.Form) (err error) {
 	PickerPhoto := t.PickerPhoto
 	//IsCancelMeal := t.IsCancelMeal ???
 	updateDate := time.Now()
-	insForm, err := db.SQLExec(tx, "Update Application Set repeat_id=?,student_id=?,application_date=?,application_time=?,type=?,note=?,meal_absent=?,late_meal=?,picker_name=?,picker_face_photo=?,direction=?,approved=?,approver=?,date_update= ?, update_count = update_count + 1 where id= ?")
+	insForm, err := db.SQLExec(tx, "Update Application Set repeat_id=?,student_id=?,application_from_date=?,application_time=?,type=?,note=?,meal_absent=?,late_meal=?,picker_name=?,picker_face_photo=?,direction=?,approved=?,approver=?,date_update= ?, update_count = update_count + 1 where id= ?")
 	if err != nil {
 		log.Println(err)
 		return err

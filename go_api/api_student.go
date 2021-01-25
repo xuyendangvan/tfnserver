@@ -317,13 +317,14 @@ func updateRecordStudentStatus(id string, status string) (err error) {
 		return err
 	}
 	sid, _ := strconv.Atoi(id)
+	timeNow := time.Now()
 
-	insForm, err := db.SQLExec(tx, "Update Student_status Set status = ? where student_id = ?")
+	insForm, err := db.SQLExec(tx, "Update Student_status Set status = ?, updated_time = ? where student_id = ?")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	if _, err := insForm.Exec(status, sid); err != nil {
+	if _, err := insForm.Exec(status, timeNow, sid); err != nil {
 		tx.Rollback()
 		log.Println(err)
 		return err
@@ -336,23 +337,29 @@ func updateRecordStudentStatus(id string, status string) (err error) {
 	client, _ := app.Messaging(ctxBG)
 
 	// select the token for parent device
-	rows, err := database.Query("SELECT d.token FROM device_token d inner join student s on s.id = ? and d.parent_id = s.parent_id;", sid)
+	rows, err := database.Query("SELECT d.token, s.name FROM device_token d inner join student s on s.id = ? and d.parent_id = s.parent_id;", sid)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	var (
-		token  string
-		tokens []string
+		token, name, title string
+		tokens             []string
 	)
 	for rows.Next() {
-		rows.Scan(&token)
+		rows.Scan(&token, &name)
 		tokens = append(tokens, token)
 	}
+
+	if status == "1" {
+		title = "Học sinh " + name + " đã tới trường"
+	} else {
+		title = "Học sinh " + name + " đã về nhà"
+	}
 	defer rows.Close()
-	log.Println(ctxBG, client, tokens)
-	messaging.SendMulti(ctxBG, client, tokens)
+	log.Println(ctxBG, client, tokens, title)
+	messaging.SendMulti(ctxBG, client, tokens, title)
 	return nil
 }
 
@@ -379,7 +386,7 @@ func getDataStudentActivityFromDB(id string) []byte {
 		data    model.Activity
 		records []model.Activity
 	)
-	rows, err := database.Query("SELECT a.id,a.type,a.date_occur,a.date_expire,a.poster_id,a.title,a.content,a.photo1,a.caption1,a.photo2,a.caption2,a.photo3,a.caption3,a.photo4,a.caption4,a.photo5,a.caption5,a.date_create,a.date_update,a.update_count FROM Activity a where a.type = 2 or a.class_id = (select class_id from Student s where s.id = ?)", id)
+	rows, err := database.Query("SELECT DISTINCT a.id,a.type,a.date_occur,a.date_expire,a.poster_id,a.title,a.content,a.photo1,a.caption1,a.photo2,a.caption2,a.photo3,a.caption3,a.photo4,a.caption4,a.photo5,a.caption5,a.date_create,a.date_update,a.update_count FROM Activity a where a.type = 2 or a.class_id = (select class_id from Student s where s.id = ?)", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil

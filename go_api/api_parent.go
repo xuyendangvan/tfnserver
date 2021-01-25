@@ -264,8 +264,15 @@ func GetParentNotification(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Connection", "close")
 	defer r.Body.Close()
 	ID := mux.Vars(r)["id"]
+
+	sidx, _ := r.URL.Query()["startIndex"]
+	idx := sidx[0]
+
+	categorys, _ := r.URL.Query()["category"]
+	category := categorys[0]
+
 	log.Printf(ID)
-	jsonResponse := getDataNotificationByParentFromDB(ID)
+	jsonResponse := getDataNotificationByParentFromDB(ID, idx, category)
 	if jsonResponse == nil {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -274,14 +281,14 @@ func GetParentNotification(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getDataNotificationByParentFromDB(id string) []byte {
+func getDataNotificationByParentFromDB(id string, idx string, category string) []byte {
 	database := db.DBConn()
 	defer database.Close()
 	var (
 		data    model.NotificationData
 		records []model.NotificationData
 	)
-	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 1 and DATEDIFF(n.expired_date, CURDATE()) >= 0")
+	rows, err := database.Query("SELECT * FROM Notification n WHERE n.type = 1 and category=? and id > ? and DATEDIFF(n.expired_date, CURDATE()) >= 0", category, idx)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -329,7 +336,7 @@ func getDataFormByParentFromDB(id string) []byte {
 		data    model.Form
 		records []model.Form
 	)
-	rows, err := database.Query("SELECT a.id,a.type,a.student_id,a.application_date,a.note,a.meal_absent,a.late_meal,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
+	rows, err := database.Query("SELECT a.id,a.type,a.student_id,a.application_from_date,a.note,a.meal_absent,a.late_meal,a.picker_name,a.picker_face_photo,a.direction,a.approved,a.approver,a.date_create,a.date_update,a.update_count FROM Student s inner join Application a ON s.id = a.student_id WHERE s.parent_id= ?", id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -338,7 +345,7 @@ func getDataFormByParentFromDB(id string) []byte {
 		var date, datecreate time.Time
 		var count int
 		var picker_name, picker_face_photo, direction, approved, approver string
-		rows.Scan(&data.Id, &data.Type_, &data.StudentID, &date, &data.Content, &data.CancelMeal, &data.LateMeal, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
+		rows.Scan(&data.Id, &data.Type_, &data.StudentID, &data.DateRequestFrom, &data.Content, &data.CancelMeal, &data.LateMeal, &picker_name, &picker_face_photo, &direction, &approved, &approver, &datecreate, &date, &count)
 		records = append(records, data)
 	}
 	defer rows.Close()
@@ -460,4 +467,53 @@ func createDeviceToken(deviceToken model.DeviceToken) (err error) {
 	}
 	tx.Commit()
 	return nil
+}
+
+// Get the student status by parent ID
+func FindStudentStatusByParentID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Connection", "close")
+	r.Header.Set("Connection", "close")
+	defer r.Body.Close()
+	ID := mux.Vars(r)["id"]
+	log.Printf(ID)
+	jsonResponse := getStudentStatusByParentFromDB(ID)
+	if jsonResponse == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Write(jsonResponse)
+	w.WriteHeader(http.StatusOK)
+}
+
+func getStudentStatusByParentFromDB(id string) []byte {
+	database := db.DBConn()
+	defer database.Close()
+	var (
+		data    model.StudentStatus
+		records []model.StudentStatus
+		//temp1   int
+	)
+	rows, err := database.Query("SELECT s.id, s.name, ns.status, ns.updated_time FROM Student s inner join student_status ns on s.parent_id = ? and s.id = ns.student_id", id)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	for rows.Next() {
+		// Get student name and ID
+		data.SchoolArrival = 0
+		rows.Scan(&data.StudentID, &data.StudentName, &data.SchoolArrival, &data.ParentNotice)
+
+		records = append(records, data)
+	}
+	defer rows.Close()
+	if records == nil {
+		return nil
+	}
+	jsonResponse, jsonError := json.Marshal(records)
+	if jsonError != nil {
+		fmt.Println(jsonError)
+		return nil
+	}
+	return jsonResponse
 }
