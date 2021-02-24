@@ -1,10 +1,21 @@
 package swagger
 
 import (
+	"bytes"
+	"encoding/base64"
+	"errors"
+	"image"
+	"io/ioutil"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 )
 
 // HashPassword .. HashPassword
@@ -35,4 +46,98 @@ func ConvertStringToDate(date string, format string) (time.Time, error) {
 		return time.Now(), err
 	}
 	return result, nil
+}
+
+var (
+	ErrBucket       = errors.New("Invalid bucket!")
+	ErrSize         = errors.New("Invalid size!")
+	ErrInvalidImage = errors.New("Invalid image!")
+	FormatJPEG      = "/9j"
+	FormatPNG       = "iVB"
+	FormatGIF       = "R0l"
+)
+
+func SaveImageToDisk(fileNameBase, data string) (string, error) {
+	idx := strings.Index(data, ";base64,")
+	if idx < 0 {
+		return "", ErrInvalidImage
+	}
+	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(data[idx+8:]))
+	buff := bytes.Buffer{}
+	_, err := buff.ReadFrom(reader)
+	if err != nil {
+		return "", err
+	}
+	imgCfg, fm, err := image.DecodeConfig(bytes.NewReader(buff.Bytes()))
+	if err != nil {
+		return "", err
+	}
+
+	if imgCfg.Width != 750 || imgCfg.Height != 685 {
+		return "", ErrSize
+	}
+
+	fileName := fileNameBase + "." + fm
+	ioutil.WriteFile(fileName, buff.Bytes(), 0644)
+
+	return fileName, err
+}
+
+func SaveToFile(data string) string {
+	fileName := time.Now().Format("20060102150405")
+	path := "./image/" + fileName
+	ImageType := data[0:3]
+	log.Println(ImageType)
+	unbased, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		panic("Cannot decode b64")
+	}
+	r := bytes.NewReader(unbased)
+	switch ImageType {
+	case FormatPNG:
+		path = path + ".png"
+		im, err := png.Decode(r)
+		if err != nil {
+			log.Println("Bad png")
+		}
+
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
+		if err != nil {
+			log.Println("Cannot open file")
+		}
+
+		png.Encode(f, im)
+		fileName += ".png"
+	case FormatJPEG:
+		path = path + ".jpeg"
+		log.Println(path)
+		im, err := jpeg.Decode(r)
+		if err != nil {
+			log.Println("Bad jpeg")
+		}
+
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
+		if err != nil {
+			log.Println("Cannot open file")
+		}
+		jpeg.Encode(f, im, nil)
+		fileName += ".jpeg"
+	case FormatGIF:
+		path = path + ".gif"
+		im, err := gif.Decode(r)
+		if err != nil {
+			log.Println("Bad gif")
+		}
+
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
+		if err != nil {
+			log.Println("Cannot open file")
+		}
+
+		gif.Encode(f, im, nil)
+		fileName += ".gif"
+	default:
+		fileName = "Cannot decode image"
+	}
+	return fileName
 }

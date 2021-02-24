@@ -21,6 +21,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const uploadPath = "./image"
+
 type Route struct {
 	Name        string
 	Method      string
@@ -32,7 +34,10 @@ type Routes []Route
 
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
+	router.PathPrefix("/images/").Handler(http.StripPrefix("/images/",
+		http.FileServer(http.Dir(uploadPath))))
 	for _, route := range routes {
+
 		var handler http.Handler
 		handler = route.HandlerFunc
 		handler = log.Logger(handler, route.Name)
