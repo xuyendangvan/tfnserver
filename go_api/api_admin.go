@@ -12,6 +12,7 @@ package swagger
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	db "tfnserver/db"
 	model "tfnserver/model"
@@ -25,6 +26,7 @@ func CalculateTuitionFee(w http.ResponseWriter, r *http.Request) {
 	fee := getDataStatistic()
 	e := createRecordTuitionFee(fee)
 	if e != nil {
+		log.Println(e)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -52,11 +54,11 @@ func getDataStatistic() []model.TuitionFee {
 		var year int = time.Now().Year()
 		data.Quater = (month / 3) + 1
 		data.Total = 6 * 4 * 3
-		queryAttendance := getQueryValue(data.Quater, year, "attentdance_date")
-		queryApplication := getQueryValue(data.Quater, year, "application_date")
-		data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 2 and"+queryAttendance, database, id)
-		data.Absences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 3 and"+queryAttendance, database, id)
-		data.UsedMeals = getDataIntQuery("SELECT Count(*) FROM Application a WHERE a.student_id = ? and"+queryApplication, database, id)
+		queryAttendance := getQueryValue(data.Quater, year, "attendance_date")
+		queryApplication := getQueryValue(data.Quater, year, "application_from_date")
+		data.RequestedAbsences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 2 and "+queryAttendance, database, id)
+		data.Absences = getDataIntQuery("SELECT Count(*) FROM Attendance a WHERE a.student_id = ? and a.status = 3 and "+queryAttendance, database, id)
+		data.UsedMeals = getDataIntQuery("SELECT Count(*) FROM Application a WHERE a.student_id = ? and "+queryApplication, database, id)
 		data.Id = int32(countValue)
 		data.StudentID = int32(id)
 		data.DateCreated = time.Now().Format("2006-01-02 15:04:05")
@@ -66,7 +68,8 @@ func getDataStatistic() []model.TuitionFee {
 		dataResult.Bus = 1000000
 		dataResult.Tuition = (data.Total - data.RequestedAbsences) * 100000
 		dataResult.Food = data.UsedMeals * 15000
-		data.Total = dataResult.Other + dataResult.Bus + dataResult.Tuition + dataResult.Food
+		log.Println(dataResult.Total, dataResult.Other, dataResult.Bus, dataResult.Tuition)
+		dataResult.Total = dataResult.Other + dataResult.Bus + dataResult.Tuition + dataResult.Food
 		dataResult.Paid = 0
 		dataResult.Refund = 0
 		recordResult = append(recordResult, dataResult)
@@ -83,9 +86,11 @@ func createRecordTuitionFee(fees []model.TuitionFee) (err error) {
 		return err
 	}
 	for _, fee := range fees {
+
+		log.Println(fee.Total)
+
 		Quater := fee.Quater
 		Paid := fee.Paid
-		//ClassID := fee.ClassID
 		StudentID := fee.StudentID
 		Total := fee.Total
 		Tuition := fee.Tuition
@@ -95,10 +100,8 @@ func createRecordTuitionFee(fees []model.TuitionFee) (err error) {
 		Other := fee.Other
 		DateCreate := time.Now()
 		DateUpdate := time.Now()
-		//Phone := students.Phone
-		//StudentStatus := students.StudentStatus
 
-		insForm, err := db.SQLExec(tx, "INSERT INTO Tuition_fee(student_id,quater_id, tuition_fee, cleaning_fee, bus_fee, meal_fee, refund,total,status,date_create, date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
+		insForm, err := db.SQLExec(tx, "INSERT INTO Tuition_fee(student_id,quater_id, tuition_fee, cleaning_fee, bus_fee, meal_fee, refund,total,status,create_date, update_date, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)")
 		if err != nil {
 			return err
 		}

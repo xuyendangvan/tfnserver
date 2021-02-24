@@ -13,7 +13,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	// WARNING!
 	// Change this to a fully-qualified import path
@@ -23,6 +22,9 @@ import (
 	//    sw "github.com/myname/myrepo/go"
 	//
 	sw "tfnserver/router"
+	"time"
+
+	"github.com/gorilla/handlers"
 )
 
 func main() {
@@ -30,8 +32,19 @@ func main() {
 
 	router := sw.NewRouter()
 
-	port := os.Getenv("PORT")
+	//port := os.Getenv("PORT")
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	//log.Fatal(http.ListenAndServe(":"+port, router))
 	//log.Fatal(http.ListenAndServe(":8080", router))
+	srv := &http.Server{
+		Addr:         ":8080",
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Handler: handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
+			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "DELETE", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(router),
+	}
+
+	srv.SetKeepAlivesEnabled(false)
+	//log.Fatal(srv.ListenAndServeTLS("cert.pem", "key.pem"))
+	log.Fatal(srv.ListenAndServe())
 }

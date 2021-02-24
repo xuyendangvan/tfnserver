@@ -9,13 +9,15 @@ import (
 
 func DBConn() (db *sql.DB) {
 	dbDriver := "mysql"
-	dbUser := "b50cea24f1d5d7"
-	dbPass := "b1bdfc6b"
-	dbName := "heroku_a29f42ff2497d2c"
-	// dbUser := "root"
-	// dbPass := ""
-	// dbName := "kindergarten"
-	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(us-cdbr-east-03.cleardb.com)/"+dbName+"?parseTime=true")
+	// dbUser := "b50cea24f1d5d7"
+	// dbPass := "b1bdfc6b"
+	// dbName := "heroku_a29f42ff2497d2c"
+
+	dbUser := "root"
+	dbPass := ""
+	dbName := "kindergarten"
+	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(127.0.0.1:3306)/"+dbName+"?parseTime=true")
+	//db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(us-cdbr-east-03.cleardb.com)/"+dbName+"?parseTime=true")
 	if err != nil {
 		panic(err.Error())
 	}

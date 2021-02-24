@@ -432,11 +432,13 @@ func getDataStudentNoticeFromDB(id string) []byte {
 		data    model.Notice
 		records []model.Notice
 	)
+	
 	rows, err := database.Query("SELECT n.id,n.severity,n.type,n.class_id,n.parent_id,n.date_occur,n.date_expire,n.teacher_id,n.title,n.content,n.confirm_message,n.date_create,n.date_update,n.update_count FROM Notice n where n.student_id = ? or (n.student_id = 1000 AND n.class_id = (select s.class_id from student s where s.id = ?))", id, id)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
+
 	for rows.Next() {
 		data.Content = nil
 		var date, datecreate time.Time
@@ -501,7 +503,7 @@ func getStudentTuitionFeeFromDB(id string, qid string) []byte {
 	)
 	idValue, err := strconv.Atoi(id)
 	sidValue, err := strconv.Atoi(qid)
-	rows, err := database.Query("SELECT * FROM Tution_fee where student_id = ? and quater_id = ?", idValue, sidValue)
+	rows, err := database.Query("SELECT * FROM Tuition_fee where student_id = ? and quater_id = ?", idValue, sidValue)
 	if err != nil {
 		fmt.Println(err)
 		return nil
