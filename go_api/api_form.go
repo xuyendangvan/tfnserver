@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"strconv"
 	db "tfnserver/db"
+	helper "tfnserver/helper"
 	model "tfnserver/model"
 	"time"
 
@@ -36,7 +37,7 @@ func CreateForm(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	e := createRecordForm(form)
+	e := createRecordForm(form, r.Host)
 	if e != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -44,7 +45,7 @@ func CreateForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func createRecordForm(form model.Form) (err error) {
+func createRecordForm(form model.Form, host string) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -72,13 +73,14 @@ func createRecordForm(form model.Form) (err error) {
 		break
 	// Late pickup form
 	case 2:
+		Photo := host + "/image/" + helper.SaveToFile(form.PickerPhoto, "photo")
 		query = "INSERT INTO Application(repeat_id,poster_id,student_id,application_from_date, application_to_date,application_time,class_time,type,note,late_meal,picker_name,picker_face_photo,picker_phone, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		insForm, err := db.SQLExec(tx, query)
 		if err != nil {
 			log.Println("insert err", err)
 			return err
 		}
-		if _, err := insForm.Exec(form.Repeated, form.PosterID, form.StudentID, form.DateRequestFrom, form.DateRequestTo, Type, form.Content, form.LateMeal, form.PickerName, form.PickerPhoto, form.PickerPhone, timeNow, timeNow, 0); err != nil {
+		if _, err := insForm.Exec(form.Repeated, form.PosterID, form.StudentID, form.DateRequestFrom, form.DateRequestTo, Type, form.Content, form.LateMeal, form.PickerName, Photo, form.PickerPhone, timeNow, timeNow, 0); err != nil {
 			tx.Rollback()
 			log.Println("exc err", err)
 			return err
@@ -118,7 +120,7 @@ func UpdateForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(t)
-	e := updateRecordForm(ID, t)
+	e := updateRecordForm(ID, t, r.Host)
 	if e != nil {
 		log.Printf(e.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -127,7 +129,7 @@ func UpdateForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func updateRecordForm(ID string, t model.Form) (err error) {
+func updateRecordForm(ID string, t model.Form, host string) (err error) {
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -147,7 +149,8 @@ func updateRecordForm(ID string, t model.Form) (err error) {
 	CancelMeal := t.CancelMeal
 	LateMeal := t.LateMeal
 	PickerName := t.PickerName
-	PickerPhoto := t.PickerPhoto
+	PickerPhoto := host + "/image/" + helper.SaveToFile(t.PickerPhoto, "photo")
+	//PickerPhoto := t.PickerPhoto
 	//IsCancelMeal := t.IsCancelMeal ???
 	updateDate := time.Now()
 	insForm, err := db.SQLExec(tx, "Update Application Set repeat_id=?,student_id=?,application_from_date=?,application_time=?,type=?,note=?,meal_absent=?,late_meal=?,picker_name=?,picker_face_photo=?,direction=?,approved=?,approver=?,date_update= ?, update_count = update_count + 1 where id= ?")

@@ -445,6 +445,7 @@ func AddActivity(w http.ResponseWriter, r *http.Request) {
 }
 
 func createRecordActivity(list []model.Activity, host string) (err error) {
+	forlder := "/image/"
 	database := db.DBConn()
 	defer database.Close()
 	tx, err := db.SQLBegin(database)
@@ -458,17 +459,19 @@ func createRecordActivity(list []model.Activity, host string) (err error) {
 		TeacherID := item.TeacherID
 		Title := item.Title
 		Content := item.Content
-		Photo := helper.SaveToFile(item.Photo1)
+		Photo1 := host + forlder + helper.SaveToFile(item.Photo1, "photo1")
+		Photo2 := host + forlder + helper.SaveToFile(item.Photo2, "photo2")
+		Photo3 := host + forlder + helper.SaveToFile(item.Photo3, "photo3")
+		Photo4 := host + forlder + helper.SaveToFile(item.Photo4, "photo4")
+		Photo5 := host + forlder + helper.SaveToFile(item.Photo5, "photo5")
 		DateCreated := time.Now()
-		//URLPhoto := ""
-		URLPhoto := host + "/images/" + Photo
 		//DateUpdate := time.Now()s
 
-		insForm, err := db.SQLExec(tx, "INSERT INTO activity(type, class_id, date_occur, date_expire, poster_id, title, content, photo1, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
+		insForm, err := db.SQLExec(tx, "INSERT INTO activity(type, class_id, date_occur, date_expire, poster_id, title, content, photo1, photo2, photo3, photo4, photo5, date_create, date_update,update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 		if err != nil {
 			return err
 		}
-		if _, err := insForm.Exec(Type, ClassID, DateCreated, DateCreated.AddDate(0, 0, 5), TeacherID, Title, Content, URLPhoto, DateCreated, DateCreated, 0); err != nil {
+		if _, err := insForm.Exec(Type, ClassID, DateCreated, DateCreated.AddDate(0, 0, 5), TeacherID, Title, Content, Photo1, Photo2, Photo3, Photo4, Photo5, DateCreated, DateCreated, 0); err != nil {
 			tx.Rollback()
 			return err
 		}
