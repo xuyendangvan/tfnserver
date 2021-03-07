@@ -73,7 +73,7 @@ func createRecordForm(form model.Form, host string) (err error) {
 		break
 	// Late pickup form
 	case 2:
-		Photo := host + "/image/" + helper.SaveToFile(form.PickerPhoto, "photo")
+		Photo := helper.SaveToFile(form.PickerPhoto, "photo", host, "/image/")
 		query = "INSERT INTO Application(repeat_id,poster_id,student_id,application_from_date, application_to_date,application_time,class_time,type,note,late_meal,picker_name,picker_face_photo,picker_phone, date_create,date_update, update_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		insForm, err := db.SQLExec(tx, query)
 		if err != nil {
@@ -149,7 +149,7 @@ func updateRecordForm(ID string, t model.Form, host string) (err error) {
 	CancelMeal := t.CancelMeal
 	LateMeal := t.LateMeal
 	PickerName := t.PickerName
-	PickerPhoto := host + "/image/" + helper.SaveToFile(t.PickerPhoto, "photo")
+	PickerPhoto := helper.SaveToFile(t.PickerPhoto, "photo", host, "/image/")
 	//PickerPhoto := t.PickerPhoto
 	//IsCancelMeal := t.IsCancelMeal ???
 	updateDate := time.Now()

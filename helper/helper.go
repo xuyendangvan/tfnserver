@@ -83,65 +83,68 @@ func SaveImageToDisk(fileNameBase, data string) (string, error) {
 	return fileName, err
 }
 
-func SaveToFile(data string, name string) string {
-	loc, _ := time.LoadLocation("MST")
-	now := time.Now().In(loc)
-	fileName := name + now.Format("20060102150405")
-	path := "./image/" + fileName
-	ImageType := data[0:3]
-	log.Println(ImageType)
-	unbased, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		fileName = "error"
-		log.Println("Cannot decode b64")
-		return fileName
+func SaveToFile(data string, name string, host string, folder string) *string {
+	if len(data) > 3 {
+		loc, _ := time.LoadLocation("MST")
+		now := time.Now().In(loc)
+		fileName := name + now.Format("20060102150405")
+		path := "./image/" + fileName
+		ImageType := data[0:3]
+		log.Println(ImageType)
+		unbased, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			log.Println("Cannot decode b64")
+			return nil
+		}
+		r := bytes.NewReader(unbased)
+		switch ImageType {
+		case FormatPNG:
+			path = path + ".png"
+			im, err := png.Decode(r)
+			if err != nil {
+				log.Println("Bad png")
+			}
+
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
+			if err != nil {
+				log.Println("Cannot open file")
+			}
+
+			png.Encode(f, im)
+			fileName += ".png"
+		case FormatJPEG:
+			path = path + ".jpeg"
+			log.Println(path)
+			im, err := jpeg.Decode(r)
+			if err != nil {
+				log.Println("Bad jpeg")
+			}
+
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
+			if err != nil {
+				log.Println("Cannot open file")
+			}
+			jpeg.Encode(f, im, nil)
+			fileName += ".jpeg"
+		case FormatGIF:
+			path = path + ".gif"
+			im, err := gif.Decode(r)
+			if err != nil {
+				log.Println("Bad gif")
+			}
+
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
+			if err != nil {
+				log.Println("Cannot open file")
+			}
+
+			gif.Encode(f, im, nil)
+			fileName += ".gif"
+		default:
+			fileName = ""
+		}
+		result := host + folder + fileName
+		return &result
 	}
-	r := bytes.NewReader(unbased)
-	switch ImageType {
-	case FormatPNG:
-		path = path + ".png"
-		im, err := png.Decode(r)
-		if err != nil {
-			log.Println("Bad png")
-		}
-
-		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
-		if err != nil {
-			log.Println("Cannot open file")
-		}
-
-		png.Encode(f, im)
-		fileName += ".png"
-	case FormatJPEG:
-		path = path + ".jpeg"
-		log.Println(path)
-		im, err := jpeg.Decode(r)
-		if err != nil {
-			log.Println("Bad jpeg")
-		}
-
-		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
-		if err != nil {
-			log.Println("Cannot open file")
-		}
-		jpeg.Encode(f, im, nil)
-		fileName += ".jpeg"
-	case FormatGIF:
-		path = path + ".gif"
-		im, err := gif.Decode(r)
-		if err != nil {
-			log.Println("Bad gif")
-		}
-
-		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0777)
-		if err != nil {
-			log.Println("Cannot open file")
-		}
-
-		gif.Encode(f, im, nil)
-		fileName += ".gif"
-	default:
-		fileName = "error"
-	}
-	return fileName
+	return nil
 }

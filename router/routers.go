@@ -34,7 +34,7 @@ type Routes []Route
 
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
-	router.PathPrefix("/images/").Handler(http.StripPrefix("/images/",
+	router.PathPrefix("/image/").Handler(http.StripPrefix("/image/",
 		http.FileServer(http.Dir(uploadPath))))
 	for _, route := range routes {
 

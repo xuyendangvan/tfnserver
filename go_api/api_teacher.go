@@ -459,11 +459,11 @@ func createRecordActivity(list []model.Activity, host string) (err error) {
 		TeacherID := item.TeacherID
 		Title := item.Title
 		Content := item.Content
-		Photo1 := host + forlder + helper.SaveToFile(item.Photo1, "photo1")
-		Photo2 := host + forlder + helper.SaveToFile(item.Photo2, "photo2")
-		Photo3 := host + forlder + helper.SaveToFile(item.Photo3, "photo3")
-		Photo4 := host + forlder + helper.SaveToFile(item.Photo4, "photo4")
-		Photo5 := host + forlder + helper.SaveToFile(item.Photo5, "photo5")
+		Photo1 := helper.SaveToFile(item.Photo1, "photo1", host, forlder)
+		Photo2 := helper.SaveToFile(item.Photo2, "photo2", host, forlder)
+		Photo3 := helper.SaveToFile(item.Photo3, "photo3", host, forlder)
+		Photo4 := helper.SaveToFile(item.Photo4, "photo4", host, forlder)
+		Photo5 := helper.SaveToFile(item.Photo5, "photo5", host, forlder)
 		DateCreated := time.Now()
 		//DateUpdate := time.Now()s
 
